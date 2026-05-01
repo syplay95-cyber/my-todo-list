@@ -2,272 +2,206 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>그림 로드맵 & 일정 대시보드</title>
+    <title>우리들의 그림 대시보드</title>
     <style>
-        :root { --primary: #007bff; --success: #28a745; --vacation: #ff9f43; --bg: #f0f2f5; --card: #ffffff; }
-        body { font-family: 'Malgun Gothic', sans-serif; background-color: var(--bg); display: flex; justify-content: center; padding: 30px; margin: 0; }
+        :root { --primary: #007bff; --userA: #6c5ce7; --userB: #fd79a8; --bg: #f0f2f5; --card: #ffffff; }
+        body { font-family: 'Malgun Gothic', sans-serif; background-color: var(--bg); margin: 0; padding: 0; }
         
-        .dashboard { display: flex; gap: 20px; width: 1100px; max-width: 95%; align-items: flex-start; }
+        /* 메인 포털 */
+        #portal { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 30px; }
+        .user-cards { display: flex; gap: 30px; }
+        .user-card { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); cursor: pointer; transition: 0.3s; text-align: center; width: 220px; border-top: 10px solid #ddd; }
+        .user-card:hover { transform: translateY(-10px); }
+        .user-card.a { border-color: var(--userA); }
+        .user-card.b { border-color: var(--userB); }
         
-        /* 왼쪽 (설정/관리) */
-        .side-panel { flex: 1; display: flex; flex-direction: column; gap: 15px; min-width: 300px; }
+        /* 대시보드 레이아웃 */
+        #dashboard { display: none; padding: 20px; }
+        .nav-bar { display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px 25px; border-radius: 15px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .container { display: flex; gap: 20px; max-width: 1200px; margin: 0 auto; align-items: flex-start; }
         
-        /* 오른쪽 (워크페이스) */
-        .main-panel { flex: 2; display: flex; flex-direction: column; gap: 15px; }
+        .side { flex: 1; display: flex; flex-direction: column; gap: 20px; min-width: 320px; }
+        .main { flex: 1.5; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); min-height: 500px; }
+        
+        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .btn { border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .btn-back { background: #eee; }
+        .btn-save { background: var(--primary); color: white; width: 100%; margin-top: 10px; }
+        
+        /* 유저별 테마 */
+        .theme-a { --primary: var(--userA); }
+        .theme-b { --primary: var(--userB); }
 
-        .card { background: var(--card); padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-
-        /* 요일 표시 및 날짜 */
-        .header-card { text-align: center; border-bottom: 3px solid var(--primary); }
-        .date-picker { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-weight: bold; margin-bottom: 10px; box-sizing: border-box; }
-        #dayDisplay { font-size: 1.2em; font-weight: bold; color: var(--primary); }
-
-        /* 설정 보관함 */
-        .config-header { font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; padding-bottom: 10px; border-bottom: 1px solid #eee; }
-        .config-content { max-height: 300px; overflow-y: auto; display: none; margin-top: 10px; font-size: 0.85em; }
-        .config-inputs input { width: 95%; padding: 5px; margin-bottom: 4px; border: 1px solid #eee; }
-
-        /* 체크리스트 영역 */
-        .guide-box { background: #f8fbff; border-left: 5px solid var(--primary); padding: 15px; border-radius: 8px; }
-        .checklist-item { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
-        .progress-bar-bg { background: #eee; height: 10px; border-radius: 5px; margin: 10px 0; overflow: hidden; }
-        #progressBar { background: var(--success); width: 0%; height: 100%; transition: 0.3s; }
-
-        /* 미니 캘린더 */
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 10px; }
-        .calendar-day { font-size: 0.8em; padding: 8px 0; text-align: center; border-radius: 4px; border: 1px solid #f0f0f0; cursor: pointer; }
-        .calendar-day:hover { background: #f0f7ff; }
-        .calendar-day.today { border: 2px solid var(--primary); font-weight: bold; }
-        .calendar-day.vacation { background: var(--vacation); color: white; border-color: var(--vacation); }
-        .cal-header { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-weight: bold; font-size: 0.75em; color: #888; margin-bottom: 5px; }
-
-        .input-group { display: flex; gap: 5px; margin-top: 15px; }
-        .input-group input { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 5px; }
-        .btn { border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; color: white; font-weight: bold; }
-        .btn-blue { background: var(--primary); }
-        .btn-grey { background: #6c757d; }
-
-        ul { list-style: none; padding: 0; margin-top: 10px; }
-        li { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #f9f9f9; font-size: 0.9em; }
-        .done { text-decoration: line-through; color: #ccc; }
+        /* 체크리스트 */
+        .guide-box { background: #f8fbff; border-left: 5px solid var(--primary); padding: 20px; border-radius: 12px; margin-bottom: 20px; }
+        .check-item { display: flex; align-items: center; gap: 12px; margin: 12px 0; font-size: 1.1em; }
+        input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; }
+        .progress-container { background: #eee; height: 12px; border-radius: 6px; margin: 15px 0; overflow: hidden; }
+        #progressBar { background: #28a745; width: 0%; height: 100%; transition: 0.3s; }
     </style>
 </head>
 <body>
 
-<div class="dashboard">
-    <!-- 왼쪽: 설정 및 통계 -->
-    <div class="side-panel">
-        <div class="card header-card">
-            <input type="date" id="dateSelect" class="date-picker">
-            <div id="dayDisplay">날짜를 선택하세요</div>
+<!-- 1. 포털 화면 -->
+<div id="portal">
+    <h1 style="color: #333;">🎨 그림 팀 스케줄러</h1>
+    <div class="user-cards">
+        <div class="user-card a" onclick="initUser('A')">
+            <h2>사용자 A</h2>
+            <p>공부하러 가기 →</p>
         </div>
-
-        <div class="card">
-            <div class="config-header" onclick="toggleConfig()">⚙️ 커리큘럼 보관함 <span>▼</span></div>
-            <div id="configContent" class="config-content"></div>
-        </div>
-
-        <div class="card">
-            <div style="font-weight: bold; margin-bottom: 10px; font-size: 0.9em;">🗓️ 월간 일정 요약</div>
-            <div class="cal-header">
-                <div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div>
-            </div>
-            <div id="miniCalendar" class="calendar-grid"></div>
-            <p style="font-size: 0.7em; color: #999; margin-top: 8px;">* 날짜를 클릭하여 휴가/특별일정 표시(주황색)</p>
-        </div>
-
-        <div class="card">
-            <button class="btn btn-grey" style="width:100%" onclick="updateStats()">📊 통계 업데이트</button>
-            <div id="statBox" style="margin-top:10px; font-size: 0.85em;"></div>
+        <div class="user-card b" onclick="initUser('B')">
+            <h2>사용자 B</h2>
+            <p>공부하러 가기 →</p>
         </div>
     </div>
+    <p id="syncStatus" style="color: #888; font-size: 0.9em;">상태: 온라인 연동 준비 완료</p>
+</div>
 
-    <!-- 오른쪽: 오늘의 실행 -->
-    <div class="main-panel">
-        <div class="card guide-box">
-            <span id="themeTitle" style="font-size: 1.2em; font-weight: bold;">🎯 오늘의 테마</span>
-            <div id="checkArea" style="margin-top: 15px;"></div>
-            <div class="progress-bar-bg"><div id="progressBar"></div></div>
-            <div id="themeProgress" style="font-size: 0.9em; font-weight: bold; color: var(--success);">달성률: 0%</div>
+<!-- 2. 대시보드 화면 -->
+<div id="dashboard">
+    <div class="nav-bar">
+        <button class="btn btn-back" onclick="location.reload()">◀ 유저 선택</button>
+        <h2 id="userNameDisplay" style="margin:0;">사용자</h2>
+        <div id="syncIndicator" style="font-size: 0.8em; color: var(--primary);">● 실시간 동기화 중</div>
+    </div>
+
+    <div class="container">
+        <div class="side">
+            <div class="card">
+                <label style="display:block; margin-bottom:10px; font-weight:bold;">날짜 선택</label>
+                <input type="date" id="dateSelect" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;">
+            </div>
+            
+            <div class="card">
+                <div style="font-weight:bold; margin-bottom:10px;">⚙️ 요일별 테마 설정</div>
+                <div id="configArea" style="font-size:0.85em;">
+                    <!-- 스크립트로 생성 -->
+                </div>
+            </div>
         </div>
 
-        <div class="card">
-            <div style="font-weight: bold; margin-bottom: 10px;">📝 개별 메모 및 할 일</div>
-            <div class="input-group">
-                <input type="text" id="todoInput" placeholder="오늘만의 특별한 일정을 입력하세요...">
-                <button class="btn btn-blue" onclick="addExtra()">추가</button>
+        <div class="main">
+            <div class="guide-box">
+                <h3 id="themeTitle" style="margin:0 0 15px 0;">🎯 오늘의 테마</h3>
+                <div id="checkArea"></div>
+                <div class="progress-container"><div id="progressBar"></div></div>
+                <div id="progressText" style="font-weight:bold; color:#28a745;">달성률: 0%</div>
             </div>
-            <ul id="extraList"></ul>
+            <button class="btn btn-save" onclick="syncToCloud()">☁️ 구글 시트에 기록 저장하기</button>
+            <p style="font-size: 0.8em; color: #999; margin-top: 10px; text-align: center;">* 저장 버튼을 누르면 상대방도 내 진도를 볼 수 있습니다.</p>
         </div>
     </div>
 </div>
 
 <script>
+    // ⚠️ 중요: 아까 복사한 주소를 여기에 넣으세요!
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwukQeWbv1IwCNVj0BXfTtrmXXf5T-bbHzPQzdzrUFVcJeOml4x149vHI9zVvSoH4W_/exec';
+    
+    let currentUser = '';
     const dateInput = document.getElementById('dateSelect');
-    const roadmap = JSON.parse(localStorage.getItem('roadmap_v2')) || {};
-    const vacations = JSON.parse(localStorage.getItem('vacations')) || [];
+    const days = ['일','월','화','수','목','금','토'];
 
-    // 초기화
-    window.onload = () => {
+    function initUser(user) {
+        currentUser = user;
+        document.getElementById('portal').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
+        document.body.className = user === 'A' ? 'theme-a' : 'theme-b';
+        document.getElementById('userNameDisplay').innerText = `사용자 ${user}의 공간`;
+        
         dateInput.value = new Date().toISOString().split('T')[0];
-        initConfig();
+        renderConfig();
         updateUI();
-    };
+    }
 
-    // 1. 커리큘럼 설정
-    function initConfig() {
-        const container = document.getElementById('configContent');
-        const days = ['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
+    // 설정 영역 생성
+    function renderConfig() {
+        const area = document.getElementById('configArea');
+        const roadmap = JSON.parse(localStorage.getItem(currentUser + '-roadmap')) || {};
+        area.innerHTML = '';
         days.forEach((day, idx) => {
             const data = roadmap[idx] || { theme: '', items: ['', ''] };
-            container.innerHTML += `
+            area.innerHTML += `
                 <div style="margin-bottom:10px;">
-                    <label style="font-weight:bold;">${day}</label>
-                    <div class="config-inputs">
-                        <input type="text" placeholder="테마" value="${data.theme}" onchange="saveConfig(${idx}, 'theme', this.value)">
-                        <input type="text" placeholder="필수 1" value="${data.items[0]}" onchange="saveConfig(${idx}, 0, this.value)">
-                        <input type="text" placeholder="필수 2" value="${data.items[1]}" onchange="saveConfig(${idx}, 1, this.value)">
-                    </div>
+                    <b>${day}요일</b>
+                    <input type="text" placeholder="테마" value="${data.theme}" onchange="saveConfig(${idx}, 'theme', this.value)" style="width:100%; padding:5px; margin-top:3px;">
                 </div>`;
         });
     }
 
     function saveConfig(idx, type, val) {
-        if(!roadmap[idx]) roadmap[idx] = { theme: '', items: ['', ''] };
+        let roadmap = JSON.parse(localStorage.getItem(currentUser + '-roadmap')) || {};
+        if(!roadmap[idx]) roadmap[idx] = { theme: '', items: ['기본항목 1', '기본항목 2'] };
         if(type==='theme') roadmap[idx].theme = val;
-        else roadmap[idx].items[type] = val;
-        localStorage.setItem('roadmap_v2', JSON.stringify(roadmap));
+        localStorage.setItem(currentUser + '-roadmap', JSON.stringify(roadmap));
         updateUI();
     }
 
-    // 2. 미니 캘린더 생성
-    function renderCalendar() {
-        const cal = document.getElementById('miniCalendar');
-        cal.innerHTML = '';
-        const now = new Date(dateInput.value);
-        const year = now.getFullYear();
-        const month = now.getMonth();
-        
-        const firstDay = new Date(year, month, 1).getDay();
-        const lastDate = new Date(year, month + 1, 0).getDate();
-
-        // 공백
-        for(let i=0; i<firstDay; i++) cal.innerHTML += '<div></div>';
-        
-        // 날짜
-        for(let d=1; d<=lastDate; d++) {
-            const fullDate = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-            const isToday = fullDate === dateInput.value ? 'today' : '';
-            const isVacation = vacations.includes(fullDate) ? 'vacation' : '';
-            
-            const dayEl = document.createElement('div');
-            dayEl.className = `calendar-day ${isToday} ${isVacation}`;
-            dayEl.innerText = d;
-            dayEl.onclick = () => toggleVacation(fullDate);
-            cal.appendChild(dayEl);
-        }
-    }
-
-    function toggleVacation(dateStr) {
-        const idx = vacations.indexOf(dateStr);
-        if(idx > -1) vacations.splice(idx, 1);
-        else vacations.push(dateStr);
-        localStorage.setItem('vacations', JSON.stringify(vacations));
-        renderCalendar();
-    }
-
-    // 3. UI 업데이트 로직
     function updateUI() {
         const d = new Date(dateInput.value);
-        document.getElementById('dayDisplay').innerText = ['일','월','화','수','목','금','토'][d.getDay()] + "요일";
-        
+        const roadmap = JSON.parse(localStorage.getItem(currentUser + '-roadmap')) || {};
         const data = roadmap[d.getDay()];
         const checkArea = document.getElementById('checkArea');
         checkArea.innerHTML = '';
-        
+
         if(data && data.theme) {
             document.getElementById('themeTitle').innerText = `🎯 오늘의 테마: ${data.theme}`;
-            const status = JSON.parse(localStorage.getItem('status-'+dateInput.value)) || {};
-            data.items.forEach((item, i) => {
-                if(!item) return;
+            const status = JSON.parse(localStorage.getItem(currentUser + '-status-' + dateInput.value)) || {};
+            // 기본 2개 항목으로 설정
+            const items = data.items || ['공부하기 1', '공부하기 2'];
+            items.forEach((item, i) => {
                 const checked = status[i] ? 'checked' : '';
-                checkArea.innerHTML += `<div class="checklist-item"><input type="checkbox" ${checked} onchange="saveStatus(${i}, this.checked)"> ${item}</div>`;
+                checkArea.innerHTML += `
+                    <div class="check-item">
+                        <input type="checkbox" ${checked} onchange="saveStatus(${i}, this.checked)">
+                        <span>${item}</span>
+                    </div>`;
             });
-        } else {
-            document.getElementById('themeTitle').innerText = "🎯 설정된 테마가 없습니다.";
         }
-        
-        renderCalendar();
         updateProgress();
-        loadExtras();
     }
 
-    function saveStatus(i, check) {
-        const status = JSON.parse(localStorage.getItem('status-'+dateInput.value)) || {};
-        status[i] = check;
-        localStorage.setItem('status-'+dateInput.value, JSON.stringify(status));
+    function saveStatus(idx, isChecked) {
+        const key = currentUser + '-status-' + dateInput.value;
+        const status = JSON.parse(localStorage.getItem(key)) || {};
+        status[idx] = isChecked;
+        localStorage.setItem(key, JSON.stringify(status));
         updateProgress();
     }
 
     function updateProgress() {
-        const all = document.querySelectorAll('#checkArea input').length;
-        const done = document.querySelectorAll('#checkArea input:checked').length;
-        const p = all ? Math.round(done/all*100) : 0;
+        const checks = document.querySelectorAll('#checkArea input').length;
+        const checked = document.querySelectorAll('#checkArea input:checked').length;
+        const p = checks ? Math.round(checked/checks*100) : 0;
         document.getElementById('progressBar').style.width = p + '%';
-        document.getElementById('themeProgress').innerText = `달성률: ${p}%`;
+        document.getElementById('progressText').innerText = `달성률: ${p}%`;
     }
 
-    function addExtra() {
-        const input = document.getElementById('todoInput');
-        if(!input.value) return;
-        const list = JSON.parse(localStorage.getItem('ex-'+dateInput.value)) || [];
-        list.push({t: input.value, d: false});
-        localStorage.setItem('ex-'+dateInput.value, JSON.stringify(list));
-        input.value = '';
-        loadExtras();
-    }
+    // 클라우드 저장 (구글 시트로 전송)
+    async function syncToCloud() {
+        const theme = document.getElementById('themeTitle').innerText;
+        const progress = document.getElementById('progressText').innerText;
+        const status = document.getElementById('syncIndicator');
+        
+        status.innerText = '⏳ 저장 중...';
+        
+        const payload = {
+            user: currentUser,
+            date: dateInput.value,
+            theme: theme,
+            progress: progress
+        };
 
-    function loadExtras() {
-        const list = JSON.parse(localStorage.getItem('ex-'+dateInput.value)) || [];
-        const el = document.getElementById('extraList');
-        el.innerHTML = '';
-        list.forEach((item, i) => {
-            el.innerHTML += `<li><span class="${item.d?'done':''}" onclick="toggleEx(${i})">${item.t}</span><span style="cursor:pointer; color:red;" onclick="delEx(${i})">✕</span></li>`;
-        });
-    }
-
-    function toggleEx(i) {
-        const list = JSON.parse(localStorage.getItem('ex-'+dateInput.value));
-        list[i].d = !list[i].d;
-        localStorage.setItem('ex-'+dateInput.value, JSON.stringify(list));
-        loadExtras();
-    }
-
-    function delEx(i) {
-        const list = JSON.parse(localStorage.getItem('ex-'+dateInput.value));
-        list.splice(i, 1);
-        localStorage.setItem('ex-'+dateInput.value, JSON.stringify(list));
-        loadExtras();
-    }
-
-    function updateStats() {
-        const now = new Date(dateInput.value);
-        let days = 0, totalP = 0;
-        for(let i=1; i<=31; i++) {
-            const k = `status-${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
-            const s = JSON.parse(localStorage.getItem(k));
-            if(s) {
-                days++;
-                const vals = Object.values(s);
-                totalP += (vals.filter(v=>v).length / vals.length) * 100;
-            }
+        try {
+            await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+            status.innerText = '✅ 구글 시트 저장 완료!';
+            setTimeout(() => status.innerText = '● 실시간 동기화 중', 3000);
+        } catch (e) {
+            status.innerText = '❌ 저장 실패 (주소 확인 필요)';
         }
-        document.getElementById('statBox').innerHTML = `이번 달 공부 일수: <b>${days}일</b><br>평균 달성률: <b>${days?Math.round(totalP/days):0}%</b>`;
-    }
-
-    function toggleConfig() {
-        const c = document.getElementById('configContent');
-        c.style.display = c.style.display === 'block' ? 'none' : 'block';
     }
 
     dateInput.addEventListener('change', updateUI);
