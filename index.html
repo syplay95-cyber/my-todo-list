@@ -2,18 +2,28 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>그림 로드맵 & 갤러리 대시보드 v5</title>
+    <title>그림 로드맵 & 갤러리 대시보드 v6</title>
     <style>
         :root { --primary: #007bff; --success: #28a745; --vacation: #ff9f43; --bg: #f0f2f5; --card: #ffffff; }
         body { font-family: 'Malgun Gothic', sans-serif; background-color: var(--bg); display: flex; justify-content: center; padding: 20px; margin: 0; }
         .dashboard { display: flex; gap: 20px; width: 1400px; max-width: 98%; align-items: flex-start; }
         
+        /* 사이드 패널 및 카드 공통 */
         .side-panel { flex: 1; display: flex; flex-direction: column; gap: 15px; min-width: 300px; }
         .main-panel { flex: 1.5; display: flex; flex-direction: column; gap: 15px; min-width: 400px; }
         .right-panel { flex: 1; display: flex; flex-direction: column; gap: 15px; min-width: 320px; }
-        .card { background: var(--card); padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .card { background: var(--card); padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow: hidden; }
 
-        /* 커리큘럼 보관함 디자인 개선 */
+        /* [수정] 날짜 선택 카드 디자인 */
+        .date-card { padding: 0 !important; }
+        .date-header { background: #f8fbff; padding: 15px; text-align: center; border-bottom: 1px solid #edf2f7; }
+        #dayDisplay { font-size: 1.4em; font-weight: 800; color: var(--primary); margin-bottom: 4px; }
+        .date-sub { font-size: 0.85em; color: #718096; }
+        .date-input-wrapper { padding: 15px; }
+        .date-picker { width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; font-family: inherit; font-size: 0.95em; cursor: pointer; color: #4a5568; outline: none; transition: border-color 0.2s; }
+        .date-picker:focus { border-color: var(--primary); }
+
+        /* 커리큘럼 보관함 */
         .config-header { font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding-bottom: 10px; }
         .config-content { max-height: 450px; overflow-y: auto; display: none; margin-top: 10px; }
         .day-group { margin-bottom: 20px; padding: 10px; background: #fcfcfc; border-radius: 8px; border: 1px solid #f0f0f0; }
@@ -21,12 +31,12 @@
         .config-inputs input { width: 100%; padding: 7px; margin-bottom: 5px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; font-size: 0.85em; }
         .input-theme { background-color: #fff9e6; border-color: #ffeeba !important; font-weight: bold; }
 
-        /* 가이드 및 리스트 스타일 */
+        /* 가이드 및 리스트 */
         .guide-box { background: #f8fbff; border-left: 5px solid var(--primary); padding: 15px; border-radius: 8px; }
         .guide-item { font-size: 0.9em; margin: 5px 0; color: #555; display: flex; align-items: center; }
         .guide-item::before { content: "✔"; margin-right: 8px; color: var(--primary); font-weight: bold; }
 
-        /* 캘린더 스타일 복구 */
+        /* 캘린더 */
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 10px; }
         .calendar-day { font-size: 0.8em; padding: 8px 0; text-align: center; border-radius: 4px; border: 1px solid #f0f0f0; cursor: pointer; background: #fff; }
         .calendar-day.today { border: 2px solid var(--primary); font-weight: bold; }
@@ -34,7 +44,7 @@
         .cal-header { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-weight: bold; font-size: 0.75em; color: #888; margin-bottom: 5px; }
         .cal-guide { font-size: 0.7em; color: #999; margin-top: 10px; text-align: center; }
 
-        /* 공통 버튼 및 이미지 */
+        /* 공통 버튼 및 기타 */
         .btn { border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; color: white; font-weight: bold; }
         .btn-blue { background: var(--primary); }
         .btn-grey { background: #6c757d; }
@@ -45,7 +55,6 @@
         .todo-text { flex: 1; margin-left: 10px; cursor: pointer; }
         .done-text { text-decoration: line-through; color: #ccc; }
         
-        /* 주간 계획 예약 리스트 */
         .week-item { margin-bottom: 15px; }
         .week-date { font-size: 0.85em; font-weight: bold; color: #555; margin-bottom: 5px; }
         .reserved-list { margin-top: 5px; background: #fafafa; border-radius: 6px; font-size: 0.8em; }
@@ -57,27 +66,36 @@
 <div class="dashboard">
     <!-- 왼쪽 패널 -->
     <div class="side-panel">
-        <div class="card">
-            <input type="date" id="dateSelect" class="date-picker">
-            <div id="dayDisplay">날짜 선택</div>
+        <!-- [디자인 수정됨] 날짜 선택 카드 -->
+        <div class="card date-card">
+            <div class="date-header">
+                <div id="dayDisplay">요일 표시</div>
+                <div class="date-sub">TODAY'S WORKFLOW</div>
+            </div>
+            <div class="date-input-wrapper">
+                <input type="date" id="dateSelect" class="date-picker">
+            </div>
         </div>
+
         <div class="card">
             <div style="font-weight: bold; margin-bottom: 10px; font-size: 0.9em; color: var(--primary); cursor: pointer;" onclick="openAlbum()">🖼️ 내 그림 앨범 보기 〉</div>
             <div id="recentPreviews" style="display: flex; overflow-x: auto;"></div>
         </div>
+
         <div class="card">
             <div class="config-header" onclick="toggleConfig()">⚙️ 커리큘럼 보관함 <span>▼</span></div>
             <div id="configContent" class="config-content"></div>
         </div>
+
         <div class="card">
             <div style="font-weight: bold; margin-bottom: 10px; font-size: 0.8em;">🗓️ 월간 요약</div>
             <div class="cal-header"><div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div></div>
             <div id="miniCalendar" class="calendar-grid"></div>
-            <div class="cal-guide">날짜를 클릭하여 휴가/중요 일정을 표시(주황색)하세요.</div>
+            <div class="cal-guide">날짜 클릭 시 휴가(주황색) 표시</div>
         </div>
     </div>
 
-    <!-- 중앙 패널 -->
+    <!-- 중앙 패널 (동일) -->
     <div class="main-panel">
         <div class="card">
             <div style="font-weight: bold; margin-bottom: 10px;">🎨 오늘의 그림 기록</div>
@@ -88,7 +106,6 @@
             <button class="btn btn-blue" style="width:100%;" onclick="document.getElementById('imgInput').click()">📷 그림 업로드</button>
             <input type="file" id="imgInput" style="display:none;" onchange="handleImg(this)">
             <img id="preview" style="width:100%; max-height:300px; object-fit:contain; border-radius:8px; margin-top:10px; display:none;">
-            <div style="font-size: 0.7em; color: #999; text-align: center; margin-top: 5px;">권장: 500KB 이하 JPG/WebP</div>
         </div>
 
         <div class="card guide-box">
@@ -110,7 +127,7 @@
         </div>
     </div>
 
-    <!-- 오른쪽 패널 -->
+    <!-- 오른쪽 패널 (동일) -->
     <div class="right-panel">
         <div class="card" style="border-top: 4px solid #6f42c1;">
             <div style="font-weight: bold; margin-bottom: 15px;">📅 차주 할 일 미리 정하기</div>
@@ -124,6 +141,7 @@
 </div>
 
 <script>
+    // JS 로직은 v5의 모든 기능을 그대로 유지합니다 (데이터 연동, 예약 삭제, 휴가 등)
     const dateInput = document.getElementById('dateSelect');
     let roadmap = JSON.parse(localStorage.getItem('roadmap_v5')) || {};
     let vacations = JSON.parse(localStorage.getItem('vacations')) || [];
@@ -138,7 +156,6 @@
         renderWeeklyPlan();
     };
 
-    // 1. 커리큘럼 설정 (디자인 개선됨)
     function initConfig() {
         const container = document.getElementById('configContent');
         const days = ['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
@@ -146,14 +163,8 @@
         days.forEach((day, idx) => {
             const data = roadmap[idx] || { theme: '', items: ['', '', '', '', ''] };
             let inputsHtml = `<input type="text" class="input-theme" value="${data.theme||''}" onchange="saveConfig(${idx}, 'theme', this.value)" placeholder="💡 주요 목표 테마 입력">`;
-            for(let i=0; i<5; i++) {
-                inputsHtml += `<input type="text" value="${data.items[i]||''}" onchange="saveConfig(${idx}, ${i}, this.value)" placeholder="항목 ${i+1}">`;
-            }
-            container.innerHTML += `
-                <div class="day-group">
-                    <span class="day-label">${day}</span>
-                    <div class="config-inputs">${inputsHtml}</div>
-                </div>`;
+            for(let i=0; i<5; i++) inputsHtml += `<input type="text" value="${data.items[i]||''}" onchange="saveConfig(${idx}, ${i}, this.value)" placeholder="항목 ${i+1}">`;
+            container.innerHTML += `<div class="day-group"><span class="day-label">${day}</span><div class="config-inputs">${inputsHtml}</div></div>`;
         });
     }
 
@@ -165,12 +176,10 @@
         updateUI();
     }
 
-    // 2. 메인 UI 업데이트
     function updateUI() {
         const d = new Date(dateInput.value);
-        document.getElementById('dayDisplay').innerText = ['일','월','화','수','목','금','토'][d.getDay()] + "요일";
+        document.getElementById('dayDisplay').innerText = ['일요일','월요일','화요일','수요일','목요일','금요일','토요일'][d.getDay()];
         
-        // 가이드 업데이트
         const data = roadmap[d.getDay()];
         const guideArea = document.getElementById('guideListArea');
         guideArea.innerHTML = '';
@@ -181,7 +190,6 @@
             document.getElementById('themeTitle').innerText = "🎯 목표를 설정해주세요.";
         }
 
-        // 이미지 미리보기
         const savedImg = localStorage.getItem('img-'+dateInput.value);
         document.getElementById('preview').src = savedImg || '';
         document.getElementById('preview').style.display = savedImg ? 'block' : 'none';
@@ -190,28 +198,21 @@
         renderCalendar();
     }
 
-    // 3. 캘린더 기능 (휴가/주황색 체크 복구)
     function renderCalendar() {
-        const cal = document.getElementById('miniCalendar');
-        cal.innerHTML = '';
+        const cal = document.getElementById('miniCalendar'); cal.innerHTML = '';
         const now = new Date(dateInput.value);
         const year = now.getFullYear(); const month = now.getMonth();
         const firstDay = new Date(year, month, 1).getDay();
         const lastDate = new Date(year, month + 1, 0).getDate();
-        
         for(let i=0; i<firstDay; i++) cal.innerHTML += '<div></div>';
-        
         for(let d=1; d<=lastDate; d++) {
             const fullDate = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
             const dayEl = document.createElement('div');
             dayEl.className = `calendar-day ${fullDate === dateInput.value ? 'today' : ''} ${vacations.includes(fullDate) ? 'vacation' : ''}`;
             dayEl.innerText = d;
             dayEl.onclick = () => {
-                if(vacations.includes(fullDate)) {
-                    vacations.splice(vacations.indexOf(fullDate), 1);
-                } else {
-                    vacations.push(fullDate);
-                }
+                if(vacations.includes(fullDate)) vacations.splice(vacations.indexOf(fullDate), 1);
+                else vacations.push(fullDate);
                 localStorage.setItem('vacations', JSON.stringify(vacations));
                 renderCalendar();
             };
@@ -219,7 +220,6 @@
         }
     }
 
-    // 4. 오늘의 공부 및 달성률
     function addExtra() {
         const val = document.getElementById('todoInput').value; if(!val) return;
         const list = JSON.parse(localStorage.getItem('ex-'+dateInput.value)) || [];
@@ -233,12 +233,7 @@
         const list = JSON.parse(localStorage.getItem('ex-'+dateInput.value)) || [];
         const el = document.getElementById('extraList'); el.innerHTML = '';
         list.forEach((item, i) => {
-            el.innerHTML += `
-                <li>
-                    <input type="checkbox" ${item.d?'checked':''} onchange="toggleEx(${i})">
-                    <span class="todo-text ${item.d?'done-text':''}" onclick="toggleEx(${i})">${item.t}</span>
-                    <span style="color:red; cursor:pointer;" onclick="delEx(${i})">✕</span>
-                </li>`;
+            el.innerHTML += `<li><input type="checkbox" ${item.d?'checked':''} onchange="toggleEx(${i})"><span class="todo-text ${item.d?'done-text':''}" onclick="toggleEx(${i})">${item.t}</span><span style="color:red; cursor:pointer;" onclick="delEx(${i})">✕</span></li>`;
         });
         updateProgress(list);
     }
@@ -265,7 +260,6 @@
         document.getElementById('themeProgress').innerText = p + '%';
     }
 
-    // 5. 주간 계획 예약 관리
     function renderWeeklyPlan() {
         const area = document.getElementById('weeklyPlanArea'); area.innerHTML = '';
         const today = new Date();
@@ -273,20 +267,8 @@
             const tDate = new Date(); tDate.setDate(today.getDate() + i);
             const dStr = tDate.toISOString().split('T')[0];
             const list = JSON.parse(localStorage.getItem('ex-'+dStr)) || [];
-            let reservedHtml = list.map((item, idx) => `
-                <div class="reserved-todo">
-                    <span>• ${item.t}</span>
-                    <span style="color:red; cursor:pointer;" onclick="delReserved('${dStr}', ${idx})">✕</span>
-                </div>`).join('');
-            area.innerHTML += `
-                <div class="week-item">
-                    <div class="week-date">${dStr} (${['일','월','화','수','목','금','토'][tDate.getDay()]})</div>
-                    <div style="display:flex; gap:5px;">
-                        <input type="text" id="wi-${dStr}" style="flex:1; font-size:0.8em; padding:4px;" placeholder="예약하기...">
-                        <button class="btn btn-blue" style="padding:4px 8px; font-size:0.7em;" onclick="saveWeekTodo('${dStr}')">등록</button>
-                    </div>
-                    <div class="reserved-list">${reservedHtml}</div>
-                </div>`;
+            let reservedHtml = list.map((item, idx) => `<div class="reserved-todo"><span>• ${item.t}</span><span style="color:red; cursor:pointer;" onclick="delReserved('${dStr}', ${idx})">✕</span></div>`).join('');
+            area.innerHTML += `<div class="week-item"><div class="week-date">${dStr} (${['일','월','화','수','목','금','토'][tDate.getDay()]})</div><div style="display:flex; gap:5px;"><input type="text" id="wi-${dStr}" style="flex:1; font-size:0.8em; padding:4px;" placeholder="예약..."><button class="btn btn-blue" style="padding:4px 8px; font-size:0.7em;" onclick="saveWeekTodo('${dStr}')">등록</button></div><div class="reserved-list">${reservedHtml}</div></div>`;
         }
     }
 
@@ -308,7 +290,6 @@
         if(dateInput.value === dStr) loadExtras();
     }
 
-    // --- 기타 보조 기능 ---
     function handleImg(input) {
         if (input.files && input.files[0]) {
             const reader = new FileReader();
