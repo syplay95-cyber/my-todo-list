@@ -4,49 +4,34 @@
     <meta charset="UTF-8">
     <title>그림 로드맵 & 일정 대시보드</title>
     <style>
+        /* [보내주신 스타일 100% 동일] */
         :root { --primary: #007bff; --success: #28a745; --vacation: #ff9f43; --bg: #f0f2f5; --card: #ffffff; }
         body { font-family: 'Malgun Gothic', sans-serif; background-color: var(--bg); display: flex; justify-content: center; padding: 30px; margin: 0; }
-        
         .dashboard { display: flex; gap: 20px; width: 1100px; max-width: 95%; align-items: flex-start; }
-        
-        /* 왼쪽 (설정/관리) */
         .side-panel { flex: 1; display: flex; flex-direction: column; gap: 15px; min-width: 300px; }
-        
-        /* 오른쪽 (워크페이스) */
         .main-panel { flex: 2; display: flex; flex-direction: column; gap: 15px; }
-
         .card { background: var(--card); padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-
-        /* 요일 표시 및 날짜 */
         .header-card { text-align: center; border-bottom: 3px solid var(--primary); }
         .date-picker { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-weight: bold; margin-bottom: 10px; box-sizing: border-box; }
         #dayDisplay { font-size: 1.2em; font-weight: bold; color: var(--primary); }
-
-        /* 설정 보관함 */
         .config-header { font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; padding-bottom: 10px; border-bottom: 1px solid #eee; }
         .config-content { max-height: 300px; overflow-y: auto; display: none; margin-top: 10px; font-size: 0.85em; }
         .config-inputs input { width: 95%; padding: 5px; margin-bottom: 4px; border: 1px solid #eee; }
-
-        /* 체크리스트 영역 */
         .guide-box { background: #f8fbff; border-left: 5px solid var(--primary); padding: 15px; border-radius: 8px; }
         .checklist-item { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
         .progress-bar-bg { background: #eee; height: 10px; border-radius: 5px; margin: 10px 0; overflow: hidden; }
         #progressBar { background: var(--success); width: 0%; height: 100%; transition: 0.3s; }
-
-        /* 미니 캘린더 */
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 10px; }
         .calendar-day { font-size: 0.8em; padding: 8px 0; text-align: center; border-radius: 4px; border: 1px solid #f0f0f0; cursor: pointer; }
         .calendar-day:hover { background: #f0f7ff; }
         .calendar-day.today { border: 2px solid var(--primary); font-weight: bold; }
         .calendar-day.vacation { background: var(--vacation); color: white; border-color: var(--vacation); }
         .cal-header { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-weight: bold; font-size: 0.75em; color: #888; margin-bottom: 5px; }
-
         .input-group { display: flex; gap: 5px; margin-top: 15px; }
         .input-group input { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 5px; }
         .btn { border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; color: white; font-weight: bold; }
         .btn-blue { background: var(--primary); }
         .btn-grey { background: #6c757d; }
-
         ul { list-style: none; padding: 0; margin-top: 10px; }
         li { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #f9f9f9; font-size: 0.9em; }
         .done { text-decoration: line-through; color: #ccc; }
@@ -55,7 +40,6 @@
 <body>
 
 <div class="dashboard">
-    <!-- 왼쪽: 설정 및 통계 -->
     <div class="side-panel">
         <div class="card header-card">
             <input type="date" id="dateSelect" class="date-picker">
@@ -73,16 +57,17 @@
                 <div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div>
             </div>
             <div id="miniCalendar" class="calendar-grid"></div>
-            <p style="font-size: 0.7em; color: #999; margin-top: 8px;">* 날짜를 클릭하여 휴가/특별일정 표시(주황색)</p>
+            <p style="font-size: 0.7em; color: #999; margin-top: 8px;">* 날짜 클릭: 휴가/특별일정(주황색)</p>
         </div>
 
         <div class="card">
-            <button class="btn btn-grey" style="width:100%" onclick="updateStats()">📊 통계 업데이트</button>
+            <button class="btn btn-grey" style="width:100%; margin-bottom: 5px;" onclick="updateStats()">📊 통계 업데이트</button>
+            <!-- 추가: 백업 버튼 (선택사항) -->
+            <button class="btn" style="width:100%; background:#28a745;" onclick="backupToCloud()">☁️ 시트에 백업하기</button>
             <div id="statBox" style="margin-top:10px; font-size: 0.85em;"></div>
         </div>
     </div>
 
-    <!-- 오른쪽: 오늘의 실행 -->
     <div class="main-panel">
         <div class="card guide-box">
             <span id="themeTitle" style="font-size: 1.2em; font-weight: bold;">🎯 오늘의 테마</span>
@@ -103,21 +88,23 @@
 </div>
 
 <script>
+    // 구글 시트 주소 (필요 없으시면 비워두셔도 됩니다)
+    const SCRIPT_URL = '여기에_복사한_주소를_넣으세요';
+
     const dateInput = document.getElementById('dateSelect');
     const roadmap = JSON.parse(localStorage.getItem('roadmap_v2')) || {};
     const vacations = JSON.parse(localStorage.getItem('vacations')) || [];
 
-    // 초기화
     window.onload = () => {
         dateInput.value = new Date().toISOString().split('T')[0];
         initConfig();
         updateUI();
     };
 
-    // 1. 커리큘럼 설정
     function initConfig() {
         const container = document.getElementById('configContent');
         const days = ['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
+        container.innerHTML = ''; // 중복 방지
         days.forEach((day, idx) => {
             const data = roadmap[idx] || { theme: '', items: ['', ''] };
             container.innerHTML += `
@@ -140,26 +127,21 @@
         updateUI();
     }
 
-    // 2. 미니 캘린더 생성
     function renderCalendar() {
         const cal = document.getElementById('miniCalendar');
         cal.innerHTML = '';
         const now = new Date(dateInput.value);
         const year = now.getFullYear();
         const month = now.getMonth();
-        
         const firstDay = new Date(year, month, 1).getDay();
         const lastDate = new Date(year, month + 1, 0).getDate();
 
-        // 공백
         for(let i=0; i<firstDay; i++) cal.innerHTML += '<div></div>';
         
-        // 날짜
         for(let d=1; d<=lastDate; d++) {
             const fullDate = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
             const isToday = fullDate === dateInput.value ? 'today' : '';
             const isVacation = vacations.includes(fullDate) ? 'vacation' : '';
-            
             const dayEl = document.createElement('div');
             dayEl.className = `calendar-day ${isToday} ${isVacation}`;
             dayEl.innerText = d;
@@ -176,11 +158,9 @@
         renderCalendar();
     }
 
-    // 3. UI 업데이트 로직
     function updateUI() {
         const d = new Date(dateInput.value);
         document.getElementById('dayDisplay').innerText = ['일','월','화','수','목','금','토'][d.getDay()] + "요일";
-        
         const data = roadmap[d.getDay()];
         const checkArea = document.getElementById('checkArea');
         checkArea.innerHTML = '';
@@ -196,7 +176,6 @@
         } else {
             document.getElementById('themeTitle').innerText = "🎯 설정된 테마가 없습니다.";
         }
-        
         renderCalendar();
         updateProgress();
         loadExtras();
@@ -270,8 +249,22 @@
         c.style.display = c.style.display === 'block' ? 'none' : 'block';
     }
 
+    // [추가된 백업 기능] - 기존 기능엔 전혀 영향을 주지 않습니다.
+    async function backupToCloud() {
+        if(!SCRIPT_URL || SCRIPT_URL.includes('여기에')) { alert('스크립트 주소를 입력해주세요!'); return; }
+        const payload = {
+            user: "나의 백업",
+            date: dateInput.value,
+            theme: document.getElementById('themeTitle').innerText,
+            progress: document.getElementById('themeProgress').innerText
+        };
+        try {
+            await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
+            alert('구글 시트에 백업되었습니다!');
+        } catch (e) { alert('백업 실패'); }
+    }
+
     dateInput.addEventListener('change', updateUI);
 </script>
-
 </body>
 </html>
