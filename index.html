@@ -2,195 +2,216 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>그림 공부 로드맵 스케줄러</title>
+    <title>그림 로드맵 & 마스터 스케줄러</title>
     <style>
-        body { font-family: 'Malgun Gothic', sans-serif; display: flex; justify-content: center; padding: 40px; background-color: #f0f2f5; }
-        .container { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 450px; text-align: center; }
+        :root { --primary: #007bff; --success: #28a745; --bg: #f4f7f6; }
+        body { font-family: 'Malgun Gothic', sans-serif; display: flex; justify-content: center; padding: 20px; background-color: var(--bg); }
+        .container { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 480px; }
         
-        /* 날짜 및 요일 표시 */
-        .date-picker { margin-bottom: 10px; padding: 10px; border: 2px solid #007bff; border-radius: 8px; font-weight: bold; width: 60%; }
-        #dayDisplay { font-size: 0.9em; color: #007bff; font-weight: bold; margin-bottom: 15px; }
+        /* 헤더 및 날짜 */
+        .header { border-bottom: 2px solid #eee; margin-bottom: 20px; padding-bottom: 10px; }
+        .date-picker { padding: 8px; border: 2px solid var(--primary); border-radius: 5px; font-weight: bold; margin-bottom: 5px; }
+        #dayDisplay { font-weight: bold; color: var(--primary); font-size: 1.1em; }
 
-        /* 로드맵 템플릿 설정 섹션 */
-        .roadmap-config { background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: left; border: 1px solid #e9ecef; }
-        .roadmap-config summary { font-weight: bold; cursor: pointer; color: #333; margin-bottom: 5px; }
-        .roadmap-input-row { display: flex; align-items: center; gap: 5px; margin-top: 8px; font-size: 0.85em; }
-        .roadmap-input-row input { flex: 1; padding: 5px; border: 1px solid #ddd; border-radius: 3px; }
+        /* 요일별 테마 설정 (수납 공간) */
+        .config-box { background: #fff; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 20px; overflow: hidden; }
+        .config-header { background: #f8f9fa; padding: 10px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; }
+        .config-content { padding: 15px; display: none; border-top: 1px solid #ddd; }
+        .day-config-item { margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px dotted #ccc; }
+        .day-config-item label { font-weight: bold; display: block; margin-bottom: 5px; color: #444; }
+        .config-inputs { display: flex; flex-direction: column; gap: 5px; }
+        .config-inputs input { padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.85em; }
 
-        /* 할 일 리스트 스타일 */
-        .input-group { display: flex; gap: 5px; margin-bottom: 20px; }
-        input[type="text"] { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
-        .add-btn { padding: 10px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
-        .template-hint { font-size: 0.8em; color: #666; margin-bottom: 10px; background: #fff3cd; padding: 8px; border-radius: 5px; display: none; cursor: pointer; border: 1px solid #ffeeba; }
+        /* 오늘 공부 가이드 및 할 일 */
+        .guide-box { background: #e7f3ff; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: left; }
+        .guide-title { font-weight: bold; color: var(--primary); margin-bottom: 8px; display: block; }
+        .checklist-item { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; font-size: 0.9em; }
+        .checklist-item input { cursor: pointer; }
 
-        ul { list-style: none; padding: 0; text-align: left; }
+        .input-group { display: flex; gap: 5px; margin-bottom: 15px; }
+        .input-group input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        .btn-add { background: var(--primary); color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; }
+
+        /* 리스트 및 기타 */
+        ul { list-style: none; padding: 0; }
         li { padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
-        .completed { text-decoration: line-through; color: #bbb; }
-        .delete-btn { background: #ff4757; color: white; border: none; padding: 5px 8px; border-radius: 3px; cursor: pointer; font-size: 0.7em; }
-
-        /* 통계 섹션 */
-        .report-section { margin-top: 25px; border-top: 2px dashed #ccc; padding-top: 15px; }
-        #summaryBox { margin-top: 10px; padding: 12px; background: #e7f3ff; border-radius: 8px; display: none; text-align: left; font-size: 0.9em; }
+        .done { text-decoration: line-through; color: #aaa; }
+        .del-btn { background: #ff4757; color: white; border: none; padding: 4px 8px; border-radius: 3px; font-size: 0.7em; cursor: pointer; }
+        
+        .progress-info { font-size: 0.85em; color: #666; margin-top: 5px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- 날짜 선택 -->
-        <input type="date" id="dateSelect" class="date-picker">
-        <div id="dayDisplay">월요일</div>
+        <div class="header">
+            <input type="date" id="dateSelect" class="date-picker">
+            <div id="dayDisplay">월요일</div>
+        </div>
 
-        <!-- [NEW] 로드맵 설정창 -->
-        <details class="roadmap-config">
-            <summary>⚙️ 요일별 공부 테마 설정</summary>
-            <div id="roadmapInputs">
-                <!-- 자바스크립트에서 요일별 입력창을 생성합니다 -->
+        <!-- 설정 섹션 -->
+        <div class="config-box">
+            <div class="config-header" onclick="toggleConfig()">⚙️ 요일별 공부 커리큘럼 보관함 <span>▼</span></div>
+            <div id="configContent" class="config-content">
+                <!-- 요일별 입력창이 자바스크립트로 생성됨 -->
             </div>
-            <p style="font-size: 0.75em; color: #888; margin-top: 10px;">* 요일별 테마를 적어두면 해당 요일에 힌트가 나타나요!</p>
-        </details>
+        </div>
 
-        <!-- 할 일 입력 -->
-        <div id="templateHint" class="template-hint" onclick="useHint()"></div>
+        <!-- 오늘 테마 가이드 -->
+        <div id="todayGuide" class="guide-box">
+            <span class="guide-title" id="themeTitle">오늘의 테마: 설정 없음</span>
+            <div id="checkArea"></div>
+            <div id="themeProgress" class="progress-info">테마 달성률: 0%</div>
+        </div>
+
+        <!-- 추가적인 일일 할 일 -->
         <div class="input-group">
-            <input type="text" id="todoInput" placeholder="오늘의 세부 계획을 적으세요...">
-            <button class="add-btn" onclick="addTodo()">추가</button>
+            <input type="text" id="todoInput" placeholder="추가 계획(여행, 일상 등)을 적으세요...">
+            <button class="btn-add" onclick="addExtraTodo()">추가</button>
         </div>
-        <ul id="todoList"></ul>
-
-        <!-- 통계 -->
-        <div class="report-section">
-            <button class="add-btn" style="background: #6c757d; width: 100%;" onclick="toggleReport()">📊 월간 통계 보기</button>
-            <div id="summaryBox"></div>
-        </div>
+        <ul id="extraList"></ul>
     </div>
 
     <script>
         const dateInput = document.getElementById('dateSelect');
         const dayDisplay = document.getElementById('dayDisplay');
-        const todoInput = document.getElementById('todoInput');
-        const todoList = document.getElementById('todoList');
-        const hintBox = document.getElementById('templateHint');
+        const themeTitle = document.getElementById('themeTitle');
+        const checkArea = document.getElementById('checkArea');
+        const extraList = document.getElementById('extraList');
         const days = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
 
-        // 1. 로드맵 설정 로직
-        const roadmapData = JSON.parse(localStorage.getItem('roadmapConfig')) || {0:'', 1:'', 2:'', 3:'', 4:'', 5:'', 6:''};
-        const roadmapInputs = document.getElementById('roadmapInputs');
+        // 데이터 구조: { 요일인덱스: { theme: '제목', items: ['항목1', '항목2'] } }
+        let roadmap = JSON.parse(localStorage.getItem('roadmap_v2')) || {};
 
-        days.forEach((day, idx) => {
-            const row = document.createElement('div');
-            row.className = 'roadmap-input-row';
-            row.innerHTML = `<span>${day.charAt(0)}</span><input type="text" value="${roadmapData[idx]}" onchange="saveRoadmap(${idx}, this.value)" placeholder="${day} 공부 테마">`;
-            roadmapInputs.appendChild(row);
-        });
-
-        function saveRoadmap(idx, value) {
-            roadmapData[idx] = value;
-            localStorage.setItem('roadmapConfig', JSON.stringify(roadmapData));
-            showHint();
-        }
-
-        // 2. 날짜 및 힌트 표시
-        dateInput.addEventListener('change', () => {
-            updateUI();
-            loadTodos();
-        });
-
-        function updateUI() {
-            const date = new Date(dateInput.value);
-            dayDisplay.innerText = days[date.getDay()];
-            showHint();
-        }
-
-        function showHint() {
-            const dayIdx = new Date(dateInput.value).getDay();
-            const theme = roadmapData[dayIdx];
-            if (theme) {
-                hintBox.innerText = `💡 오늘은 [${theme}] 하는 날! 클릭해서 추가하기`;
-                hintBox.style.display = 'block';
-            } else {
-                hintBox.style.display = 'none';
-            }
-        }
-
-        function useHint() {
-            const dayIdx = new Date(dateInput.value).getDay();
-            todoInput.value = roadmapData[dayIdx] + " - ";
-            todoInput.focus();
-        }
-
-        // 3. 기존 할 일 기능 유지
-        function addTodo() {
-            if (todoInput.value.trim() === '') return;
-            createTodoElement(todoInput.value, false);
-            todoInput.value = '';
-            saveTodos();
-            updateProgress();
-        }
-
-        function createTodoElement(text, isCompleted) {
-            const li = document.createElement('li');
-            if (isCompleted) li.classList.add('completed');
-            li.innerHTML = `<span onclick="toggleComplete(this)">${text}</span><button class="delete-btn" onclick="deleteTodo(this)">삭제</button>`;
-            todoList.appendChild(li);
-        }
-
-        function toggleComplete(element) {
-            element.parentElement.classList.toggle('completed');
-            saveTodos();
-            updateProgress();
-        }
-
-        function deleteTodo(element) {
-            element.parentElement.remove();
-            saveTodos();
-            updateProgress();
-        }
-
-        function saveTodos() {
-            const todos = [];
-            document.querySelectorAll('#todoList li').forEach(li => {
-                todos.push({ text: li.querySelector('span').innerText, completed: li.classList.contains('completed') });
+        // 1. 설정 창 초기화
+        function initConfig() {
+            const container = document.getElementById('configContent');
+            days.forEach((day, idx) => {
+                const data = roadmap[idx] || { theme: '', items: ['', '', ''] };
+                const div = document.createElement('div');
+                div.className = 'day-config-item';
+                div.innerHTML = `
+                    <label>${day}</label>
+                    <div class="config-inputs">
+                        <input type="text" placeholder="테마 명 (예: 얼굴 공부)" value="${data.theme}" onchange="saveConfig(${idx}, 'theme', this.value)">
+                        <input type="text" placeholder="필수 항목 1" value="${data.items[0] || ''}" onchange="saveConfig(${idx}, 0, this.value)">
+                        <input type="text" placeholder="필수 항목 2" value="${data.items[1] || ''}" onchange="saveConfig(${idx}, 1, this.value)">
+                        <input type="text" placeholder="필수 항목 3" value="${data.items[2] || ''}" onchange="saveConfig(${idx}, 2, this.value)">
+                    </div>
+                `;
+                container.appendChild(div);
             });
-            localStorage.setItem('todos-' + dateInput.value, JSON.stringify(todos));
         }
 
-        function loadTodos() {
-            todoList.innerHTML = '';
-            const saved = JSON.parse(localStorage.getItem('todos-' + dateInput.value)) || [];
-            saved.forEach(todo => createTodoElement(todo.text, todo.completed));
-            updateProgress();
+        function saveConfig(dayIdx, type, value) {
+            if (!roadmap[dayIdx]) roadmap[dayIdx] = { theme: '', items: ['', '', ''] };
+            if (type === 'theme') roadmap[dayIdx].theme = value;
+            else roadmap[dayIdx].items[type] = value;
+            localStorage.setItem('roadmap_v2', JSON.stringify(roadmap));
+            updateTodayUI();
         }
 
-        function updateProgress() {} // 기존 함수 유지용
-
-        function toggleReport() {
-            const box = document.getElementById('summaryBox');
-            if(box.style.display === 'block') { box.style.display = 'none'; return; }
-            box.style.display = 'block';
-            box.innerHTML = '이번 달 기록을 분석 중입니다...';
-            // (이전 답변의 통계 로직과 동일하게 작동)
-            generateMonthlyReport(box);
+        function toggleConfig() {
+            const content = document.getElementById('configContent');
+            content.style.display = content.style.display === 'block' ? 'none' : 'block';
         }
 
-        function generateMonthlyReport(box) {
-            const date = new Date(dateInput.value);
-            const m = date.getMonth() + 1;
-            let count = 0, totalP = 0;
-            for(let i=1; i<=31; i++) {
-                const k = `todos-${date.getFullYear()}-${String(m).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
-                const s = JSON.parse(localStorage.getItem(k));
-                if(s && s.length>0) {
-                    count++;
-                    totalP += (s.filter(t=>t.completed).length / s.length) * 100;
-                }
+        // 2. 화면 업데이트 (핵심 기능)
+        function updateTodayUI() {
+            const dateStr = dateInput.value;
+            const dateObj = new Date(dateStr);
+            const dayIdx = dateObj.getDay();
+            dayDisplay.innerText = days[dayIdx];
+
+            const data = roadmap[dayIdx];
+            checkArea.innerHTML = '';
+            
+            if (data && data.theme) {
+                themeTitle.innerText = `🎯 오늘의 테마: ${data.theme}`;
+                
+                // 해당 날짜의 체크 상태 로드
+                const savedStatus = JSON.parse(localStorage.getItem('status-' + dateStr)) || {};
+
+                data.items.forEach((item, i) => {
+                    if (item.trim() === '') return;
+                    const div = document.createElement('div');
+                    div.className = 'checklist-item';
+                    const checked = savedStatus[i] ? 'checked' : '';
+                    div.innerHTML = `
+                        <input type="checkbox" ${checked} onchange="saveStatus(${i}, this.checked)">
+                        <span>${item}</span>
+                    `;
+                    checkArea.appendChild(div);
+                });
+            } else {
+                themeTitle.innerText = '설정된 테마가 없습니다.';
             }
-            box.innerHTML = `<strong>${m}월 통계</strong><br>공부한 일수: ${count}일<br>평균 달성률: ${count ? Math.round(totalP/count) : 0}%`;
+            updateThemeProgress();
+            loadExtraTodos();
+        }
+
+        function saveStatus(itemIdx, isChecked) {
+            const dateStr = dateInput.value;
+            const savedStatus = JSON.parse(localStorage.getItem('status-' + dateStr)) || {};
+            savedStatus[itemIdx] = isChecked;
+            localStorage.setItem('status-' + dateStr, JSON.stringify(savedStatus));
+            updateThemeProgress();
+        }
+
+        function updateThemeProgress() {
+            const checks = checkArea.querySelectorAll('input[type="checkbox"]');
+            const checked = checkArea.querySelectorAll('input[type="checkbox"]:checked');
+            const percent = checks.length === 0 ? 0 : Math.round((checked.length / checks.length) * 100);
+            document.getElementById('themeProgress').innerText = `테마 달성률: ${percent}%`;
+        }
+
+        // 3. 일회성 추가 할 일 (유기적인 수정용)
+        function addExtraTodo() {
+            const input = document.getElementById('todoInput');
+            if (input.value.trim() === '') return;
+            const dateStr = dateInput.value;
+            const extras = JSON.parse(localStorage.getItem('extra-' + dateStr)) || [];
+            extras.push({ text: input.value, done: false });
+            localStorage.setItem('extra-' + dateStr, JSON.stringify(extras));
+            input.value = '';
+            loadExtraTodos();
+        }
+
+        function loadExtraTodos() {
+            extraList.innerHTML = '';
+            const dateStr = dateInput.value;
+            const extras = JSON.parse(localStorage.getItem('extra-' + dateStr)) || [];
+            extras.forEach((todo, i) => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <span class="${todo.done ? 'done' : ''}" onclick="toggleExtra(${i})">${todo.text}</span>
+                    <button class="del-btn" onclick="delExtra(${i})">삭제</button>
+                `;
+                extraList.appendChild(li);
+            });
+        }
+
+        function toggleExtra(i) {
+            const dateStr = dateInput.value;
+            const extras = JSON.parse(localStorage.getItem('extra-' + dateStr));
+            extras[i].done = !extras[i].done;
+            localStorage.setItem('extra-' + dateStr, JSON.stringify(extras));
+            loadExtraTodos();
+        }
+
+        function delExtra(i) {
+            const dateStr = dateInput.value;
+            const extras = JSON.parse(localStorage.getItem('extra-' + dateStr));
+            extras.splice(i, 1);
+            localStorage.setItem('extra-' + dateStr, JSON.stringify(extras));
+            loadExtraTodos();
         }
 
         window.onload = () => {
             dateInput.value = new Date().toISOString().split('T')[0];
-            updateUI();
-            loadTodos();
+            initConfig();
+            updateTodayUI();
         };
+        dateInput.addEventListener('change', updateTodayUI);
     </script>
 </body>
 </html>
