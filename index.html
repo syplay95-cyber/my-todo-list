@@ -5,34 +5,37 @@
     <title>기록하는 스케줄러</title>
     <style>
         body { font-family: 'Malgun Gothic', sans-serif; display: flex; justify-content: center; padding: 50px; background-color: #f0f2f5; }
-        .container { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 380px; text-align: center; }
+        .container { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 400px; text-align: center; }
         
-        /* 날짜 선택기 스타일 */
-        .date-picker { margin-bottom: 20px; padding: 10px; border: 2px solid #007bff; border-radius: 8px; font-weight: bold; }
+        /* 날짜 선택 및 진행률 */
+        .date-picker { margin-bottom: 20px; padding: 10px; border: 2px solid #007bff; border-radius: 8px; font-weight: bold; width: 80%; }
         h2 { margin: 10px 0; color: #333; }
-        
         .progress-container { background: #ddd; border-radius: 10px; height: 10px; width: 100%; margin: 15px 0 5px 0; overflow: hidden; }
         #progressBar { background: #28a745; height: 100%; width: 0%; transition: width 0.3s; }
         #progressText { font-size: 0.85em; color: #555; margin-bottom: 20px; }
 
+        /* 입력창 및 리스트 */
         .input-group { display: flex; gap: 5px; margin-bottom: 20px; }
         input[type="text"] { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
         .add-btn { padding: 10px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
-
         ul { list-style: none; padding: 0; text-align: left; }
-        li { padding: 12px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: #fff; }
-        li span { cursor: pointer; flex: 1; }
+        li { padding: 10px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
         .completed { text-decoration: line-through; color: #bbb; }
         .delete-btn { background: #ff4757; color: white; border: none; padding: 5px 8px; border-radius: 3px; cursor: pointer; font-size: 0.7em; }
-        
-        .info-msg { font-size: 0.8em; color: #888; margin-top: 15px; }
+
+        /* 월별 요약 섹션 */
+        .report-section { margin-top: 30px; padding-top: 20px; border-top: 2px dashed #ccc; }
+        .report-btn { width: 100%; padding: 12px; background: #6c757d; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-bottom: 15px; }
+        .report-btn:hover { background: #5a6268; }
+        #reportList { text-align: left; font-size: 0.9em; max-height: 200px; overflow-y: auto; background: #f9f9f9; padding: 10px; border-radius: 8px; display: none; }
+        .report-item { margin-bottom: 8px; display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding-bottom: 4px; }
+        .status-badge { font-weight: bold; color: #28a745; }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- 날짜 선택 기능 추가 -->
         <input type="date" id="dateSelect" class="date-picker">
-        <h2 id="displayDate">오늘의 스케줄</h2>
+        <h2 id="displayDate">기록 로딩 중...</h2>
         
         <div class="progress-container"><div id="progressBar"></div></div>
         <p id="progressText">달성도: 0%</p>
@@ -41,9 +44,13 @@
             <input type="text" id="todoInput" placeholder="할 일을 입력하세요...">
             <button class="add-btn" onclick="addTodo()">추가</button>
         </div>
-        
         <ul id="todoList"></ul>
-        <p class="info-msg">💡 날짜를 변경하면 해당 날짜의 기록을 볼 수 있어요!</p>
+
+        <!-- 월별 요약 기능 -->
+        <div class="report-section">
+            <button class="report-btn" onclick="toggleReport()">📊 이번 달 성취 리포트 보기</button>
+            <div id="reportList"></div>
+        </div>
     </div>
 
     <script>
@@ -51,27 +58,25 @@
         const displayDate = document.getElementById('displayDate');
         const todoInput = document.getElementById('todoInput');
         const todoList = document.getElementById('todoList');
+        const reportList = document.getElementById('reportList');
 
-        // 1. 초기 설정: 오늘 날짜로 세팅
         window.onload = () => {
             const now = new Date();
-            const today = now.toISOString().split('T')[0];
-            dateInput.value = today;
+            dateInput.value = now.toISOString().split('T')[0];
             updateDisplayDate();
             loadTodos();
         };
 
-        // 2. 날짜가 바뀌면 해당 날짜의 리스트 불러오기
         dateInput.addEventListener('change', () => {
             updateDisplayDate();
             loadTodos();
+            if(reportList.style.display === 'block') generateMonthlyReport();
         });
 
         function updateDisplayDate() {
-            displayDate.innerText = dateInput.value + " 기록";
+            displayDate.innerText = dateInput.value + " 스케줄";
         }
 
-        // 3. 할 일 추가
         function addTodo() {
             if (todoInput.value.trim() === '') return;
             createTodoElement(todoInput.value, false);
@@ -83,10 +88,7 @@
         function createTodoElement(text, isCompleted) {
             const li = document.createElement('li');
             if (isCompleted) li.classList.add('completed');
-            li.innerHTML = `
-                <span onclick="toggleComplete(this)">${text}</span>
-                <button class="delete-btn" onclick="deleteTodo(this)">삭제</button>
-            `;
+            li.innerHTML = `<span onclick="toggleComplete(this)">${text}</span><button class="delete-btn" onclick="deleteTodo(this)">삭제</button>`;
             todoList.appendChild(li);
         }
 
@@ -103,33 +105,68 @@
         }
 
         function updateProgress() {
-            const listItems = document.querySelectorAll('li');
+            const listItems = document.querySelectorAll('#todoList li');
             const total = listItems.length;
-            const completed = document.querySelectorAll('li.completed').length;
+            const completed = document.querySelectorAll('#todoList li.completed').length;
             const percent = total === 0 ? 0 : Math.round((completed / total) * 100);
             document.getElementById('progressBar').style.width = percent + "%";
             document.getElementById('progressText').innerText = `달성도: ${percent}%`;
         }
 
-        // 4. 저장 기능 (날짜별로 따로 저장)
         function saveTodos() {
             const todos = [];
-            document.querySelectorAll('li').forEach(li => {
-                todos.push({ 
-                    text: li.querySelector('span').innerText, 
-                    completed: li.classList.contains('completed') 
-                });
+            document.querySelectorAll('#todoList li').forEach(li => {
+                todos.push({ text: li.querySelector('span').innerText, completed: li.classList.contains('completed') });
             });
-            // 키 값을 'todos-2023-10-27' 이런 식으로 날짜별로 생성합니다.
             localStorage.setItem('todos-' + dateInput.value, JSON.stringify(todos));
         }
 
-        // 5. 불러오기 기능
         function loadTodos() {
-            todoList.innerHTML = ''; // 기존 리스트 비우기
+            todoList.innerHTML = '';
             const saved = JSON.parse(localStorage.getItem('todos-' + dateInput.value)) || [];
             saved.forEach(todo => createTodoElement(todo.text, todo.completed));
             updateProgress();
+        }
+
+        // --- 월별 요약 기능 로직 ---
+        function toggleReport() {
+            if (reportList.style.display === 'block') {
+                reportList.style.display = 'none';
+            } else {
+                reportList.style.display = 'block';
+                generateMonthlyReport();
+            }
+        }
+
+        function generateMonthlyReport() {
+            reportList.innerHTML = '';
+            const selectedDate = new Date(dateInput.value);
+            const year = selectedDate.getFullYear();
+            const month = selectedDate.getMonth() + 1;
+            
+            reportList.innerHTML = `<strong>[${year}년 ${month}월 요약]</strong><br><br>`;
+
+            let hasData = false;
+            // 1일부터 31일까지 순회하며 저장소 확인
+            for (let i = 1; i <= 31; i++) {
+                const day = i < 10 ? '0' + i : i;
+                const monthStr = month < 10 ? '0' + month : month;
+                const dateKey = `todos-${year}-${monthStr}-${day}`;
+                const saved = JSON.parse(localStorage.getItem(dateKey));
+
+                if (saved && saved.length > 0) {
+                    hasData = true;
+                    const completed = saved.filter(t => t.completed).length;
+                    const total = saved.length;
+                    const percent = Math.round((completed / total) * 100);
+                    
+                    const item = document.createElement('div');
+                    item.className = 'report-item';
+                    item.innerHTML = `<span>${month}/${day}</span> <span>${total}개 중 ${completed}개 완료</span> <span class="status-badge">${percent}%</span>`;
+                    reportList.appendChild(item);
+                }
+            }
+            if (!hasData) reportList.innerHTML += "이 달의 기록이 아직 없어요.";
         }
     </script>
 </body>
