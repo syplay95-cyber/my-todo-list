@@ -2,243 +2,275 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>그림 로드맵 대시보드</title>
+    <title>그림 로드맵 & 일정 대시보드</title>
     <style>
-        :root { --primary: #007bff; --success: #28a745; --bg: #f0f2f5; --card: #ffffff; }
-        body { font-family: 'Malgun Gothic', sans-serif; background-color: var(--bg); display: flex; justify-content: center; padding: 40px; margin: 0; }
+        :root { --primary: #007bff; --success: #28a745; --vacation: #ff9f43; --bg: #f0f2f5; --card: #ffffff; }
+        body { font-family: 'Malgun Gothic', sans-serif; background-color: var(--bg); display: flex; justify-content: center; padding: 30px; margin: 0; }
         
-        /* 메인 레이아웃: 가로 배치 */
-        .dashboard { display: flex; gap: 30px; width: 1000px; max-width: 1200px; align-items: flex-start; }
+        .dashboard { display: flex; gap: 20px; width: 1100px; max-width: 95%; align-items: flex-start; }
         
-        /* 왼쪽 컬럼 (설정 및 관리) */
-        .side-panel { flex: 1; display: flex; flex-direction: column; gap: 20px; }
+        /* 왼쪽 (설정/관리) */
+        .side-panel { flex: 1; display: flex; flex-direction: column; gap: 15px; min-width: 300px; }
         
-        /* 오른쪽 컬럼 (실행 및 리스트) */
-        .main-panel { flex: 1.5; background: var(--card); padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); min-height: 600px; }
+        /* 오른쪽 (워크페이스) */
+        .main-panel { flex: 2; display: flex; flex-direction: column; gap: 15px; }
 
-        /* 카드 공통 스타일 */
-        .card { background: var(--card); padding: 20px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .card { background: var(--card); padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
 
-        /* 날짜 & 요일 */
-        .header-card { text-align: center; }
-        .date-picker { width: 90%; padding: 10px; border: 2px solid var(--primary); border-radius: 8px; font-weight: bold; margin-bottom: 10px; font-size: 1.1em; }
+        /* 요일 표시 및 날짜 */
+        .header-card { text-align: center; border-bottom: 3px solid var(--primary); }
+        .date-picker { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-weight: bold; margin-bottom: 10px; box-sizing: border-box; }
         #dayDisplay { font-size: 1.2em; font-weight: bold; color: var(--primary); }
 
-        /* 설정창 수납 */
-        .config-box { overflow: hidden; }
-        .config-header { font-weight: bold; cursor: pointer; color: #555; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; }
-        .config-content { max-height: 400px; overflow-y: auto; font-size: 0.85em; display: none; }
-        .day-config-item { margin-bottom: 12px; }
-        .day-config-item label { font-weight: bold; color: #333; margin-bottom: 4px; display: block; }
-        .config-inputs input { width: 90%; padding: 5px; margin-bottom: 3px; border: 1px solid #ddd; border-radius: 4px; }
+        /* 설정 보관함 */
+        .config-header { font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; padding-bottom: 10px; border-bottom: 1px solid #eee; }
+        .config-content { max-height: 300px; overflow-y: auto; display: none; margin-top: 10px; font-size: 0.85em; }
+        .config-inputs input { width: 95%; padding: 5px; margin-bottom: 4px; border: 1px solid #eee; }
 
-        /* 메인 패널 내부 디자인 */
-        .guide-box { background: #f8fbff; border-left: 5px solid var(--primary); padding: 20px; border-radius: 10px; margin-bottom: 25px; }
-        .guide-title { font-size: 1.3em; font-weight: bold; color: #333; margin-bottom: 15px; display: block; }
-        .checklist-item { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 1.05em; }
-        .checklist-item input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
-        
-        .progress-container { background: #eee; height: 12px; border-radius: 6px; margin: 15px 0; overflow: hidden; }
-        #progressBar { background: var(--success); width: 0%; height: 100%; transition: width 0.3s; }
+        /* 체크리스트 영역 */
+        .guide-box { background: #f8fbff; border-left: 5px solid var(--primary); padding: 15px; border-radius: 8px; }
+        .checklist-item { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
+        .progress-bar-bg { background: #eee; height: 10px; border-radius: 5px; margin: 10px 0; overflow: hidden; }
+        #progressBar { background: var(--success); width: 0%; height: 100%; transition: 0.3s; }
 
-        .input-group { display: flex; gap: 8px; margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px; }
-        .input-group input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 8px; }
-        .btn-add { background: var(--primary); color: white; border: none; padding: 0 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        /* 미니 캘린더 */
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 10px; }
+        .calendar-day { font-size: 0.8em; padding: 8px 0; text-align: center; border-radius: 4px; border: 1px solid #f0f0f0; cursor: pointer; }
+        .calendar-day:hover { background: #f0f7ff; }
+        .calendar-day.today { border: 2px solid var(--primary); font-weight: bold; }
+        .calendar-day.vacation { background: var(--vacation); color: white; border-color: var(--vacation); }
+        .cal-header { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-weight: bold; font-size: 0.75em; color: #888; margin-bottom: 5px; }
 
-        ul { list-style: none; padding: 0; margin-top: 20px; }
-        li { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid #f9f9f9; align-items: center; }
-        .done { text-decoration: line-through; color: #bbb; }
-        .del-btn { background: #ffebeb; color: #ff4757; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.8em; }
+        .input-group { display: flex; gap: 5px; margin-top: 15px; }
+        .input-group input { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 5px; }
+        .btn { border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; color: white; font-weight: bold; }
+        .btn-blue { background: var(--primary); }
+        .btn-grey { background: #6c757d; }
 
-        #summaryBox { font-size: 0.9em; line-height: 1.6; }
+        ul { list-style: none; padding: 0; margin-top: 10px; }
+        li { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #f9f9f9; font-size: 0.9em; }
+        .done { text-decoration: line-through; color: #ccc; }
     </style>
 </head>
 <body>
 
 <div class="dashboard">
-    <!-- 왼쪽 사이드 바 -->
+    <!-- 왼쪽: 설정 및 통계 -->
     <div class="side-panel">
         <div class="card header-card">
             <input type="date" id="dateSelect" class="date-picker">
-            <div id="dayDisplay">로딩 중...</div>
+            <div id="dayDisplay">날짜를 선택하세요</div>
         </div>
 
-        <div class="card config-box">
+        <div class="card">
             <div class="config-header" onclick="toggleConfig()">⚙️ 커리큘럼 보관함 <span>▼</span></div>
             <div id="configContent" class="config-content"></div>
         </div>
 
         <div class="card">
-            <button class="btn-add" style="width:100%; background:#6c757d; padding:10px;" onclick="generateMonthlyReport()">📊 월간 통계 갱신</button>
-            <div id="summaryBox" style="margin-top:15px;">날짜를 선택하고 버튼을 누르세요.</div>
+            <div style="font-weight: bold; margin-bottom: 10px; font-size: 0.9em;">🗓️ 월간 일정 요약</div>
+            <div class="cal-header">
+                <div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div>
+            </div>
+            <div id="miniCalendar" class="calendar-grid"></div>
+            <p style="font-size: 0.7em; color: #999; margin-top: 8px;">* 날짜를 클릭하여 휴가/특별일정 표시(주황색)</p>
+        </div>
+
+        <div class="card">
+            <button class="btn btn-grey" style="width:100%" onclick="updateStats()">📊 통계 업데이트</button>
+            <div id="statBox" style="margin-top:10px; font-size: 0.85em;"></div>
         </div>
     </div>
 
-    <!-- 오른쪽 메인 판넬 -->
+    <!-- 오른쪽: 오늘의 실행 -->
     <div class="main-panel">
-        <div id="todayGuide" class="guide-box">
-            <span class="guide-title" id="themeTitle">🎯 오늘의 테마</span>
-            <div id="checkArea"></div>
-            <div class="progress-container"><div id="progressBar"></div></div>
-            <div id="themeProgress" style="font-weight: bold; color: var(--success);">달성률: 0%</div>
+        <div class="card guide-box">
+            <span id="themeTitle" style="font-size: 1.2em; font-weight: bold;">🎯 오늘의 테마</span>
+            <div id="checkArea" style="margin-top: 15px;"></div>
+            <div class="progress-bar-bg"><div id="progressBar"></div></div>
+            <div id="themeProgress" style="font-size: 0.9em; font-weight: bold; color: var(--success);">달성률: 0%</div>
         </div>
 
-        <div class="input-group">
-            <input type="text" id="todoInput" placeholder="추가 계획(여행, 일상 등) 입력...">
-            <button class="btn-add" onclick="addExtraTodo()">추가</button>
+        <div class="card">
+            <div style="font-weight: bold; margin-bottom: 10px;">📝 개별 메모 및 할 일</div>
+            <div class="input-group">
+                <input type="text" id="todoInput" placeholder="오늘만의 특별한 일정을 입력하세요...">
+                <button class="btn btn-blue" onclick="addExtra()">추가</button>
+            </div>
+            <ul id="extraList"></ul>
         </div>
-        <ul id="extraList"></ul>
     </div>
 </div>
 
 <script>
-    // [기존 스크립트 로직과 동일하지만 UI에 맞춰 일부 최적화]
     const dateInput = document.getElementById('dateSelect');
-    const dayDisplay = document.getElementById('dayDisplay');
-    const themeTitle = document.getElementById('themeTitle');
-    const checkArea = document.getElementById('checkArea');
-    const extraList = document.getElementById('extraList');
-    const days = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
+    const roadmap = JSON.parse(localStorage.getItem('roadmap_v2')) || {};
+    const vacations = JSON.parse(localStorage.getItem('vacations')) || [];
 
-    let roadmap = JSON.parse(localStorage.getItem('roadmap_v2')) || {};
-
-    function initConfig() {
-        const container = document.getElementById('configContent');
-        days.forEach((day, idx) => {
-            const data = roadmap[idx] || { theme: '', items: ['', '', ''] };
-            const div = document.createElement('div');
-            div.className = 'day-config-item';
-            div.innerHTML = `
-                <label>${day}</label>
-                <div class="config-inputs">
-                    <input type="text" placeholder="테마" value="${data.theme}" onchange="saveConfig(${idx}, 'theme', this.value)">
-                    <input type="text" placeholder="필수 1" value="${data.items[0] || ''}" onchange="saveConfig(${idx}, 0, this.value)">
-                    <input type="text" placeholder="필수 2" value="${data.items[1] || ''}" onchange="saveConfig(${idx}, 1, this.value)">
-                </div>
-            `;
-            container.appendChild(div);
-        });
-    }
-
-    function saveConfig(dayIdx, type, value) {
-        if (!roadmap[dayIdx]) roadmap[dayIdx] = { theme: '', items: ['', '', ''] };
-        if (type === 'theme') roadmap[dayIdx].theme = value;
-        else roadmap[dayIdx].items[type] = value;
-        localStorage.setItem('roadmap_v2', JSON.stringify(roadmap));
-        updateTodayUI();
-    }
-
-    function toggleConfig() {
-        const content = document.getElementById('configContent');
-        content.style.display = content.style.display === 'block' ? 'none' : 'block';
-    }
-
-    function updateTodayUI() {
-        const dateStr = dateInput.value;
-        const dateObj = new Date(dateStr);
-        const dayIdx = dateObj.getDay();
-        dayDisplay.innerText = days[dayIdx];
-
-        const data = roadmap[dayIdx];
-        checkArea.innerHTML = '';
-        
-        if (data && data.theme) {
-            themeTitle.innerText = `🎯 오늘의 테마: ${data.theme}`;
-            const savedStatus = JSON.parse(localStorage.getItem('status-' + dateStr)) || {};
-            data.items.forEach((item, i) => {
-                if (!item || item.trim() === '') return;
-                const div = document.createElement('div');
-                div.className = 'checklist-item';
-                const checked = savedStatus[i] ? 'checked' : '';
-                div.innerHTML = `<input type="checkbox" ${checked} onchange="saveStatus(${i}, this.checked)"> <span>${item}</span>`;
-                checkArea.appendChild(div);
-            });
-        } else {
-            themeTitle.innerText = '🎯 설정된 테마가 없습니다.';
-        }
-        updateThemeProgress();
-        loadExtraTodos();
-    }
-
-    function saveStatus(itemIdx, isChecked) {
-        const dateStr = dateInput.value;
-        const savedStatus = JSON.parse(localStorage.getItem('status-' + dateStr)) || {};
-        savedStatus[itemIdx] = isChecked;
-        localStorage.setItem('status-' + dateStr, JSON.stringify(savedStatus));
-        updateThemeProgress();
-    }
-
-    function updateThemeProgress() {
-        const checks = checkArea.querySelectorAll('input[type="checkbox"]');
-        const checked = checkArea.querySelectorAll('input[type="checkbox"]:checked');
-        const percent = checks.length === 0 ? 0 : Math.round((checked.length / checks.length) * 100);
-        document.getElementById('progressBar').style.width = percent + "%";
-        document.getElementById('themeProgress').innerText = `테마 달성률: ${percent}%`;
-    }
-
-    function addExtraTodo() {
-        const input = document.getElementById('todoInput');
-        if (input.value.trim() === '') return;
-        const dateStr = dateInput.value;
-        const extras = JSON.parse(localStorage.getItem('extra-' + dateStr)) || [];
-        extras.push({ text: input.value, done: false });
-        localStorage.setItem('extra-' + dateStr, JSON.stringify(extras));
-        input.value = '';
-        loadExtraTodos();
-    }
-
-    function loadExtraTodos() {
-        extraList.innerHTML = '';
-        const dateStr = dateInput.value;
-        const extras = JSON.parse(localStorage.getItem('extra-' + dateStr)) || [];
-        extras.forEach((todo, i) => {
-            const li = document.createElement('li');
-            li.innerHTML = `<span class="${todo.done ? 'done' : ''}" onclick="toggleExtra(${i})">${todo.text}</span><button class="del-btn" onclick="delExtra(${i})">삭제</button>`;
-            extraList.appendChild(li);
-        });
-    }
-
-    function toggleExtra(i) {
-        const dateStr = dateInput.value;
-        const extras = JSON.parse(localStorage.getItem('extra-' + dateStr));
-        extras[i].done = !extras[i].done;
-        localStorage.setItem('extra-' + dateStr, JSON.stringify(extras));
-        loadExtraTodos();
-    }
-
-    function delExtra(i) {
-        const dateStr = dateInput.value;
-        const extras = JSON.parse(localStorage.getItem('extra-' + dateStr));
-        extras.splice(i, 1);
-        localStorage.setItem('extra-' + dateStr, JSON.stringify(extras));
-        loadExtraTodos();
-    }
-
-    function generateMonthlyReport() {
-        const box = document.getElementById('summaryBox');
-        const date = new Date(dateInput.value);
-        const y = date.getFullYear();
-        const m = date.getMonth() + 1;
-        let count = 0, totalP = 0;
-        for(let i=1; i<=31; i++) {
-            const k = `status-${y}-${String(m).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
-            const s = JSON.parse(localStorage.getItem(k));
-            if(s) {
-                count++;
-                const keys = Object.keys(s);
-                const done = Object.values(s).filter(v => v).length;
-                totalP += (done / keys.length) * 100;
-            }
-        }
-        box.innerHTML = `<strong>${m}월 통계</strong><br>공부한 날: ${count}일<br>평균 달성률: ${count ? Math.round(totalP/count) : 0}%`;
-    }
-
+    // 초기화
     window.onload = () => {
         dateInput.value = new Date().toISOString().split('T')[0];
         initConfig();
-        updateTodayUI();
+        updateUI();
     };
-    dateInput.addEventListener('change', updateTodayUI);
+
+    // 1. 커리큘럼 설정
+    function initConfig() {
+        const container = document.getElementById('configContent');
+        const days = ['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
+        days.forEach((day, idx) => {
+            const data = roadmap[idx] || { theme: '', items: ['', ''] };
+            container.innerHTML += `
+                <div style="margin-bottom:10px;">
+                    <label style="font-weight:bold;">${day}</label>
+                    <div class="config-inputs">
+                        <input type="text" placeholder="테마" value="${data.theme}" onchange="saveConfig(${idx}, 'theme', this.value)">
+                        <input type="text" placeholder="필수 1" value="${data.items[0]}" onchange="saveConfig(${idx}, 0, this.value)">
+                        <input type="text" placeholder="필수 2" value="${data.items[1]}" onchange="saveConfig(${idx}, 1, this.value)">
+                    </div>
+                </div>`;
+        });
+    }
+
+    function saveConfig(idx, type, val) {
+        if(!roadmap[idx]) roadmap[idx] = { theme: '', items: ['', ''] };
+        if(type==='theme') roadmap[idx].theme = val;
+        else roadmap[idx].items[type] = val;
+        localStorage.setItem('roadmap_v2', JSON.stringify(roadmap));
+        updateUI();
+    }
+
+    // 2. 미니 캘린더 생성
+    function renderCalendar() {
+        const cal = document.getElementById('miniCalendar');
+        cal.innerHTML = '';
+        const now = new Date(dateInput.value);
+        const year = now.getFullYear();
+        const month = now.getMonth();
+        
+        const firstDay = new Date(year, month, 1).getDay();
+        const lastDate = new Date(year, month + 1, 0).getDate();
+
+        // 공백
+        for(let i=0; i<firstDay; i++) cal.innerHTML += '<div></div>';
+        
+        // 날짜
+        for(let d=1; d<=lastDate; d++) {
+            const fullDate = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const isToday = fullDate === dateInput.value ? 'today' : '';
+            const isVacation = vacations.includes(fullDate) ? 'vacation' : '';
+            
+            const dayEl = document.createElement('div');
+            dayEl.className = `calendar-day ${isToday} ${isVacation}`;
+            dayEl.innerText = d;
+            dayEl.onclick = () => toggleVacation(fullDate);
+            cal.appendChild(dayEl);
+        }
+    }
+
+    function toggleVacation(dateStr) {
+        const idx = vacations.indexOf(dateStr);
+        if(idx > -1) vacations.splice(idx, 1);
+        else vacations.push(dateStr);
+        localStorage.setItem('vacations', JSON.stringify(vacations));
+        renderCalendar();
+    }
+
+    // 3. UI 업데이트 로직
+    function updateUI() {
+        const d = new Date(dateInput.value);
+        document.getElementById('dayDisplay').innerText = ['일','월','화','수','목','금','토'][d.getDay()] + "요일";
+        
+        const data = roadmap[d.getDay()];
+        const checkArea = document.getElementById('checkArea');
+        checkArea.innerHTML = '';
+        
+        if(data && data.theme) {
+            document.getElementById('themeTitle').innerText = `🎯 오늘의 테마: ${data.theme}`;
+            const status = JSON.parse(localStorage.getItem('status-'+dateInput.value)) || {};
+            data.items.forEach((item, i) => {
+                if(!item) return;
+                const checked = status[i] ? 'checked' : '';
+                checkArea.innerHTML += `<div class="checklist-item"><input type="checkbox" ${checked} onchange="saveStatus(${i}, this.checked)"> ${item}</div>`;
+            });
+        } else {
+            document.getElementById('themeTitle').innerText = "🎯 설정된 테마가 없습니다.";
+        }
+        
+        renderCalendar();
+        updateProgress();
+        loadExtras();
+    }
+
+    function saveStatus(i, check) {
+        const status = JSON.parse(localStorage.getItem('status-'+dateInput.value)) || {};
+        status[i] = check;
+        localStorage.setItem('status-'+dateInput.value, JSON.stringify(status));
+        updateProgress();
+    }
+
+    function updateProgress() {
+        const all = document.querySelectorAll('#checkArea input').length;
+        const done = document.querySelectorAll('#checkArea input:checked').length;
+        const p = all ? Math.round(done/all*100) : 0;
+        document.getElementById('progressBar').style.width = p + '%';
+        document.getElementById('themeProgress').innerText = `달성률: ${p}%`;
+    }
+
+    function addExtra() {
+        const input = document.getElementById('todoInput');
+        if(!input.value) return;
+        const list = JSON.parse(localStorage.getItem('ex-'+dateInput.value)) || [];
+        list.push({t: input.value, d: false});
+        localStorage.setItem('ex-'+dateInput.value, JSON.stringify(list));
+        input.value = '';
+        loadExtras();
+    }
+
+    function loadExtras() {
+        const list = JSON.parse(localStorage.getItem('ex-'+dateInput.value)) || [];
+        const el = document.getElementById('extraList');
+        el.innerHTML = '';
+        list.forEach((item, i) => {
+            el.innerHTML += `<li><span class="${item.d?'done':''}" onclick="toggleEx(${i})">${item.t}</span><span style="cursor:pointer; color:red;" onclick="delEx(${i})">✕</span></li>`;
+        });
+    }
+
+    function toggleEx(i) {
+        const list = JSON.parse(localStorage.getItem('ex-'+dateInput.value));
+        list[i].d = !list[i].d;
+        localStorage.setItem('ex-'+dateInput.value, JSON.stringify(list));
+        loadExtras();
+    }
+
+    function delEx(i) {
+        const list = JSON.parse(localStorage.getItem('ex-'+dateInput.value));
+        list.splice(i, 1);
+        localStorage.setItem('ex-'+dateInput.value, JSON.stringify(list));
+        loadExtras();
+    }
+
+    function updateStats() {
+        const now = new Date(dateInput.value);
+        let days = 0, totalP = 0;
+        for(let i=1; i<=31; i++) {
+            const k = `status-${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+            const s = JSON.parse(localStorage.getItem(k));
+            if(s) {
+                days++;
+                const vals = Object.values(s);
+                totalP += (vals.filter(v=>v).length / vals.length) * 100;
+            }
+        }
+        document.getElementById('statBox').innerHTML = `이번 달 공부 일수: <b>${days}일</b><br>평균 달성률: <b>${days?Math.round(totalP/days):0}%</b>`;
+    }
+
+    function toggleConfig() {
+        const c = document.getElementById('configContent');
+        c.style.display = c.style.display === 'block' ? 'none' : 'block';
+    }
+
+    dateInput.addEventListener('change', updateUI);
 </script>
 
 </body>
