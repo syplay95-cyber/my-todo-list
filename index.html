@@ -1,25 +1,136 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>성장하는 스케줄러</title>
-    <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <title>기록하는 스케줄러</title>
+    <style>
+        body { font-family: 'Malgun Gothic', sans-serif; display: flex; justify-content: center; padding: 50px; background-color: #f0f2f5; }
+        .container { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 380px; text-align: center; }
+        
+        /* 날짜 선택기 스타일 */
+        .date-picker { margin-bottom: 20px; padding: 10px; border: 2px solid #007bff; border-radius: 8px; font-weight: bold; }
+        h2 { margin: 10px 0; color: #333; }
+        
+        .progress-container { background: #ddd; border-radius: 10px; height: 10px; width: 100%; margin: 15px 0 5px 0; overflow: hidden; }
+        #progressBar { background: #28a745; height: 100%; width: 0%; transition: width 0.3s; }
+        #progressText { font-size: 0.85em; color: #555; margin-bottom: 20px; }
+
+        .input-group { display: flex; gap: 5px; margin-bottom: 20px; }
+        input[type="text"] { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        .add-btn { padding: 10px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+
+        ul { list-style: none; padding: 0; text-align: left; }
+        li { padding: 12px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: #fff; }
+        li span { cursor: pointer; flex: 1; }
+        .completed { text-decoration: line-through; color: #bbb; }
+        .delete-btn { background: #ff4757; color: white; border: none; padding: 5px 8px; border-radius: 3px; cursor: pointer; font-size: 0.7em; }
+        
+        .info-msg { font-size: 0.8em; color: #888; margin-top: 15px; }
+    </style>
 </head>
 <body>
     <div class="container">
-        <h2 id="todayDate"></h2>
-        <p id="quote">"오늘의 노력이 내일의 당신을 만듭니다."</p>
+        <!-- 날짜 선택 기능 추가 -->
+        <input type="date" id="dateSelect" class="date-picker">
+        <h2 id="displayDate">오늘의 스케줄</h2>
         
-        <div class="progress-container">
-            <div id="progressBar"></div>
-        </div>
-        <p id="progressText">완성도: 0%</p>
+        <div class="progress-container"><div id="progressBar"></div></div>
+        <p id="progressText">달성도: 0%</p>
 
         <div class="input-group">
             <input type="text" id="todoInput" placeholder="할 일을 입력하세요...">
-            <button onclick="addTodo()">추가</button>
+            <button class="add-btn" onclick="addTodo()">추가</button>
         </div>
+        
         <ul id="todoList"></ul>
+        <p class="info-msg">💡 날짜를 변경하면 해당 날짜의 기록을 볼 수 있어요!</p>
     </div>
-    <script src="script.js"></script>
+
+    <script>
+        const dateInput = document.getElementById('dateSelect');
+        const displayDate = document.getElementById('displayDate');
+        const todoInput = document.getElementById('todoInput');
+        const todoList = document.getElementById('todoList');
+
+        // 1. 초기 설정: 오늘 날짜로 세팅
+        window.onload = () => {
+            const now = new Date();
+            const today = now.toISOString().split('T')[0];
+            dateInput.value = today;
+            updateDisplayDate();
+            loadTodos();
+        };
+
+        // 2. 날짜가 바뀌면 해당 날짜의 리스트 불러오기
+        dateInput.addEventListener('change', () => {
+            updateDisplayDate();
+            loadTodos();
+        });
+
+        function updateDisplayDate() {
+            displayDate.innerText = dateInput.value + " 기록";
+        }
+
+        // 3. 할 일 추가
+        function addTodo() {
+            if (todoInput.value.trim() === '') return;
+            createTodoElement(todoInput.value, false);
+            todoInput.value = '';
+            saveTodos();
+            updateProgress();
+        }
+
+        function createTodoElement(text, isCompleted) {
+            const li = document.createElement('li');
+            if (isCompleted) li.classList.add('completed');
+            li.innerHTML = `
+                <span onclick="toggleComplete(this)">${text}</span>
+                <button class="delete-btn" onclick="deleteTodo(this)">삭제</button>
+            `;
+            todoList.appendChild(li);
+        }
+
+        function toggleComplete(element) {
+            element.parentElement.classList.toggle('completed');
+            saveTodos();
+            updateProgress();
+        }
+
+        function deleteTodo(element) {
+            element.parentElement.remove();
+            saveTodos();
+            updateProgress();
+        }
+
+        function updateProgress() {
+            const listItems = document.querySelectorAll('li');
+            const total = listItems.length;
+            const completed = document.querySelectorAll('li.completed').length;
+            const percent = total === 0 ? 0 : Math.round((completed / total) * 100);
+            document.getElementById('progressBar').style.width = percent + "%";
+            document.getElementById('progressText').innerText = `달성도: ${percent}%`;
+        }
+
+        // 4. 저장 기능 (날짜별로 따로 저장)
+        function saveTodos() {
+            const todos = [];
+            document.querySelectorAll('li').forEach(li => {
+                todos.push({ 
+                    text: li.querySelector('span').innerText, 
+                    completed: li.classList.contains('completed') 
+                });
+            });
+            // 키 값을 'todos-2023-10-27' 이런 식으로 날짜별로 생성합니다.
+            localStorage.setItem('todos-' + dateInput.value, JSON.stringify(todos));
+        }
+
+        // 5. 불러오기 기능
+        function loadTodos() {
+            todoList.innerHTML = ''; // 기존 리스트 비우기
+            const saved = JSON.parse(localStorage.getItem('todos-' + dateInput.value)) || [];
+            saved.forEach(todo => createTodoElement(todo.text, todo.completed));
+            updateProgress();
+        }
+    </script>
 </body>
 </html>
