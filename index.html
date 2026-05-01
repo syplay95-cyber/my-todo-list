@@ -1,12 +1,19 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>나의 할 일 스케줄러</title>
+    <title>성장하는 스케줄러</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
-        <h2>📅 오늘의 할 일</h2>
+        <h2 id="todayDate"></h2>
+        <p id="quote">"오늘의 노력이 내일의 당신을 만듭니다."</p>
+        
+        <div class="progress-container">
+            <div id="progressBar"></div>
+        </div>
+        <p id="progressText">완성도: 0%</p>
+
         <div class="input-group">
             <input type="text" id="todoInput" placeholder="할 일을 입력하세요...">
             <button onclick="addTodo()">추가</button>
