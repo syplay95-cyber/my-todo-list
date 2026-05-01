@@ -8,13 +8,18 @@
         body { font-family: 'Malgun Gothic', sans-serif; background-color: var(--bg); display: flex; justify-content: center; padding: 30px; margin: 0; }
         .dashboard { display: flex; gap: 20px; width: 1100px; max-width: 95%; align-items: flex-start; }
         
-        .side-panel { flex: 1; display: flex; flex-direction: column; gap: 15px; min-width: 300px; }
+        .side-panel { flex: 1; display: flex; flex-direction: column; gap: 15px; min-width: 320px; }
         .main-panel { flex: 2; display: flex; flex-direction: column; gap: 15px; }
         .card { background: var(--card); padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
 
-        /* 헤더 및 내비게이션 */
-        .header-card { text-align: center; border-bottom: 3px solid var(--primary); position: relative; }
-        .album-link { position: absolute; top: 10px; right: 10px; font-size: 0.8em; cursor: pointer; color: var(--primary); font-weight: bold; }
+        /* 앨범 카드 및 프리뷰 디자인 */
+        .album-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .album-title { font-weight: bold; font-size: 0.95em; cursor: pointer; color: var(--primary); }
+        .recent-previews { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px; }
+        .recent-item { width: 50px; height: 50px; border-radius: 6px; object-fit: cover; border: 1px solid #eee; background: #f9f9f9; flex-shrink: 0; }
+
+        /* 헤더 날짜 선택 */
+        .header-card { text-align: center; border-bottom: 3px solid var(--primary); }
         .date-picker { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-weight: bold; margin-bottom: 10px; box-sizing: border-box; }
         #dayDisplay { font-size: 1.2em; font-weight: bold; color: var(--primary); }
 
@@ -36,10 +41,9 @@
         .calendar-day.vacation { background: var(--vacation); color: white; border-color: var(--vacation); }
         .cal-header { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-weight: bold; font-size: 0.75em; color: #888; }
 
-        /* 이미지 업로드 & 프리뷰 */
-        .upload-area { margin-top: 15px; border-top: 1px dashed #ddd; padding-top: 15px; }
-        .img-preview { width: 100%; max-height: 200px; object-fit: cover; border-radius: 8px; margin-top: 10px; display: none; }
-        .cat-select { padding: 5px; border-radius: 4px; border: 1px solid #ddd; margin-bottom: 5px; width: 100%; }
+        /* 이미지 업로드 영역 */
+        .img-preview { width: 100%; max-height: 300px; object-fit: contain; border-radius: 8px; margin-top: 10px; display: none; background: #fafafa; border: 1px solid #eee; }
+        .cat-select { padding: 8px; border-radius: 4px; border: 1px solid #ddd; margin-bottom: 8px; width: 100%; font-size: 0.9em; }
 
         .btn { border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; color: white; font-weight: bold; }
         .btn-blue { background: var(--primary); }
@@ -53,17 +57,29 @@
 
 <div class="dashboard">
     <div class="side-panel">
+        <!-- 1. 날짜 선택 카드 -->
         <div class="card header-card">
-            <span class="album-link" onclick="openAlbum()">🖼️ 내 그림 앨범</span>
             <input type="date" id="dateSelect" class="date-picker">
             <div id="dayDisplay">날짜 선택</div>
         </div>
 
+        <!-- 2. 내 그림 앨범 및 최근 프리뷰 카드 -->
+        <div class="card">
+            <div class="album-header">
+                <span class="album-title" onclick="openAlbum()">🖼️ 내 그림 앨범 보기 〉</span>
+            </div>
+            <div id="recentPreviews" class="recent-previews">
+                <!-- 최근 그림 5개가 여기에 출력됨 -->
+            </div>
+        </div>
+
+        <!-- 3. 커리큘럼 설정 -->
         <div class="card">
             <div class="config-header" onclick="toggleConfig()">⚙️ 커리큘럼 보관함 <span>▼</span></div>
             <div id="configContent" class="config-content"></div>
         </div>
 
+        <!-- 4. 월간 요약 -->
         <div class="card">
             <div style="font-weight: bold; margin-bottom: 10px; font-size: 0.9em;">🗓️ 월간 일정 요약</div>
             <div class="cal-header"><div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div></div>
@@ -80,13 +96,16 @@
         <!-- 그림 업로드 섹션 -->
         <div class="card">
             <div style="font-weight: bold; margin-bottom: 10px;">🎨 오늘의 그림 기록</div>
-            <select id="catSelect" class="cat-select"></select>
-            <button class="btn btn-grey" style="padding: 4px 8px; font-size: 0.7em;" onclick="manageCategories()">카테고리 편집</button>
+            <div style="display:flex; gap:5px; align-items:center; margin-bottom:8px;">
+                <select id="catSelect" class="cat-select" style="margin-bottom:0; flex:1;"></select>
+                <button class="btn btn-grey" style="padding: 6px 10px; font-size: 0.75em; white-space:nowrap;" onclick="manageCategories()">카테고리 편집</button>
+            </div>
             <input type="file" id="imgInput" accept="image/*" style="display:none;" onchange="handleImg(this)">
-            <button class="btn btn-blue" style="width:100%; margin-top:10px;" onclick="document.getElementById('imgInput').click()">📷 그림 업로드하기</button>
+            <button class="btn btn-blue" style="width:100%;" onclick="document.getElementById('imgInput').click()">📷 그림 업로드하기</button>
             <img id="preview" class="img-preview">
         </div>
 
+        <!-- 체크리스트 섹션 -->
         <div class="card guide-box">
             <span id="themeTitle" style="font-size: 1.2em; font-weight: bold;">🎯 오늘의 테마</span>
             <div id="checkArea" style="margin-top: 15px;"></div>
@@ -94,6 +113,7 @@
             <div id="themeProgress" style="font-size: 0.9em; font-weight: bold; color: var(--success);">달성률: 0%</div>
         </div>
 
+        <!-- 할 일 메모 섹션 -->
         <div class="card">
             <div style="font-weight: bold; margin-bottom: 10px;">📝 개별 메모</div>
             <div style="display:flex; gap:5px;">
@@ -116,7 +136,95 @@
         initConfig();
         updateCatUI();
         updateUI();
+        renderRecentPreviews(); // 최근 그림 로드
     };
+
+    // 최근 업로드 그림 프리뷰 렌더링
+    function renderRecentPreviews() {
+        const previewContainer = document.getElementById('recentPreviews');
+        previewContainer.innerHTML = '';
+        
+        const allImgs = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key.startsWith('img-')) {
+                allImgs.push({
+                    date: key.replace('img-', ''),
+                    data: localStorage.getItem(key)
+                });
+            }
+        }
+
+        // 날짜 역순(최신순) 정렬 후 상위 5개 추출
+        allImgs.sort((a, b) => new Date(b.date) - new Date(a.date));
+        const recent5 = allImgs.slice(0, 5);
+
+        if(recent5.length === 0) {
+            previewContainer.innerHTML = '<span style="font-size:0.8em; color:#ccc;">최근 업로드된 그림이 없습니다.</span>';
+            return;
+        }
+
+        recent5.forEach(img => {
+            const imgEl = document.createElement('img');
+            imgEl.src = img.data;
+            imgEl.className = 'recent-item';
+            imgEl.title = img.date;
+            imgEl.onclick = () => {
+                dateInput.value = img.date;
+                updateUI();
+            };
+            previewContainer.appendChild(imgEl);
+        });
+    }
+
+    // [기존 함수들 유지]
+    function updateUI() {
+        const d = new Date(dateInput.value);
+        document.getElementById('dayDisplay').innerText = ['일','월','화','수','목','금','토'][d.getDay()] + "요일";
+        
+        const data = roadmap[d.getDay()];
+        const checkArea = document.getElementById('checkArea');
+        checkArea.innerHTML = '';
+        if(data && data.theme) {
+            document.getElementById('themeTitle').innerText = `🎯 오늘의 테마: ${data.theme}`;
+            const status = JSON.parse(localStorage.getItem('status-'+dateInput.value)) || {};
+            data.items.forEach((item, i) => {
+                if(!item) return;
+                const checked = status[i] ? 'checked' : '';
+                checkArea.innerHTML += `<div class="checklist-item"><input type="checkbox" ${checked} onchange="saveStatus(${i}, this.checked)"> ${item}</div>`;
+            });
+        } else {
+            document.getElementById('themeTitle').innerText = "🎯 설정된 테마가 없습니다.";
+        }
+        
+        const savedImg = localStorage.getItem('img-'+dateInput.value);
+        const preview = document.getElementById('preview');
+        if(savedImg) {
+            preview.src = savedImg;
+            preview.style.display = 'block';
+        } else {
+            preview.style.display = 'none';
+        }
+
+        renderCalendar();
+        updateProgress();
+        loadExtras();
+    }
+
+    function handleImg(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const imgData = e.target.result;
+                const cat = document.getElementById('catSelect').value;
+                localStorage.setItem('img-'+dateInput.value, imgData);
+                localStorage.setItem('imgCat-'+dateInput.value, cat);
+                updateUI();
+                renderRecentPreviews(); // 업로드 후 프리뷰 갱신
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
 
     function initConfig() {
         const container = document.getElementById('configContent');
@@ -144,53 +252,6 @@
         updateUI();
     }
 
-    function updateUI() {
-        const d = new Date(dateInput.value);
-        document.getElementById('dayDisplay').innerText = ['일','월','화','수','목','금','토'][d.getDay()] + "요일";
-        
-        const data = roadmap[d.getDay()];
-        const checkArea = document.getElementById('checkArea');
-        checkArea.innerHTML = '';
-        if(data && data.theme) {
-            document.getElementById('themeTitle').innerText = `🎯 오늘의 테마: ${data.theme}`;
-            const status = JSON.parse(localStorage.getItem('status-'+dateInput.value)) || {};
-            data.items.forEach((item, i) => {
-                if(!item) return;
-                const checked = status[i] ? 'checked' : '';
-                checkArea.innerHTML += `<div class="checklist-item"><input type="checkbox" ${checked} onchange="saveStatus(${i}, this.checked)"> ${item}</div>`;
-            });
-        }
-        
-        // 이미지 불러오기
-        const savedImg = localStorage.getItem('img-'+dateInput.value);
-        const preview = document.getElementById('preview');
-        if(savedImg) {
-            preview.src = savedImg;
-            preview.style.display = 'block';
-        } else {
-            preview.style.display = 'none';
-        }
-
-        renderCalendar();
-        updateProgress();
-        loadExtras();
-    }
-
-    // 이미지 처리
-    function handleImg(input) {
-        if (input.files && input.files[0]) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const imgData = e.target.result;
-                const cat = document.getElementById('catSelect').value;
-                localStorage.setItem('img-'+dateInput.value, imgData);
-                localStorage.setItem('imgCat-'+dateInput.value, cat);
-                updateUI();
-            };
-            reader.readAsDataURL(input.files[0]);
-        }
-    }
-
     function updateCatUI() {
         const sel = document.getElementById('catSelect');
         sel.innerHTML = categories.map(c => `<option value="${c}">${c}</option>`).join('');
@@ -205,7 +266,6 @@
         }
     }
 
-    // 앨범 페이지 열기
     function openAlbum() {
         const albumWin = window.open("", "_blank");
         const allImgs = [];
@@ -220,21 +280,22 @@
                 });
             }
         }
+        allImgs.sort((a, b) => new Date(b.date) - new Date(a.date));
 
         albumWin.document.write(`
             <html><head><title>그림 앨범</title><style>
                 body { font-family: sans-serif; background: #f0f2f5; padding: 20px; }
                 .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
-                .item { background: white; padding: 10px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-                img { width: 100%; border-radius: 5px; height: 150px; object-fit: cover; }
-                .info { font-size: 0.8em; margin-top: 5px; color: #666; }
-                .cat-tag { display: inline-block; background: #007bff; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7em; }
+                .item { background: white; padding: 10px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align:center; }
+                img { width: 100%; border-radius: 5px; height: 180px; object-fit: cover; cursor: pointer; }
+                .info { font-size: 0.8em; margin-top: 8px; color: #666; font-weight: bold; }
+                .cat-tag { display: inline-block; background: #007bff; color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7em; margin-top: 4px; }
             </style></head><body>
-            <h1>🖼️ 내 그림 모아보기</h1>
+            <h1>🖼️ 내 그림 모아보기 (총 ${allImgs.length}점)</h1>
             <div class="gallery">
                 ${allImgs.map(img => `
                     <div class="item">
-                        <img src="${img.data}">
+                        <img src="${img.data}" onclick="window.open(this.src)">
                         <div class="info">📅 ${img.date}</div>
                         <div class="cat-tag">${img.cat}</div>
                     </div>
@@ -244,7 +305,7 @@
         `);
     }
 
-    // --- 기존 기능 유지 함수들 ---
+    // --- 유틸리티 기능 ---
     function saveStatus(i, check) {
         const status = JSON.parse(localStorage.getItem('status-'+dateInput.value)) || {};
         status[i] = check;
