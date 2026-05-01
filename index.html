@@ -2,135 +2,276 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>우리들의 그림 팀 대시보드</title>
+    <title>그림 로드맵 & 일정 대시보드</title>
     <style>
-        :root { --primary: #007bff; --userA: #6c5ce7; --userB: #fd79a8; --bg: #f0f2f5; }
-        body { font-family: 'Malgun Gothic', sans-serif; background-color: var(--bg); margin: 0; padding: 0; }
+        :root { --primary: #007bff; --success: #28a745; --vacation: #ff9f43; --bg: #f0f2f5; --card: #ffffff; }
+        body { font-family: 'Malgun Gothic', sans-serif; background-color: var(--bg); display: flex; justify-content: center; padding: 30px; margin: 0; }
         
-        /* 유저 선택 화면 */
-        #portal { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 30px; }
-        .user-cards { display: flex; gap: 30px; }
-        .user-card { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; width: 200px; position: relative; border-top: 10px solid #ddd; }
-        .user-card.a { border-color: var(--userA); }
-        .user-card.b { border-color: var(--userB); }
-        .name-display { font-size: 1.5em; font-weight: bold; margin: 15px 0; cursor: pointer; }
-        .edit-btn { font-size: 0.8em; color: #888; cursor: pointer; text-decoration: underline; }
-        .btn-go { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 10px; font-weight: bold; }
+        .dashboard { display: flex; gap: 20px; width: 1100px; max-width: 95%; align-items: flex-start; }
+        
+        /* 왼쪽 (설정/관리) */
+        .side-panel { flex: 1; display: flex; flex-direction: column; gap: 15px; min-width: 300px; }
+        
+        /* 오른쪽 (워크페이스) */
+        .main-panel { flex: 2; display: flex; flex-direction: column; gap: 15px; }
 
-        /* 대시보드 (기존 스타일 동일) */
-        #dashboard { display: none; padding: 20px; }
-        .nav-bar { display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px 25px; border-radius: 15px; margin-bottom: 20px; }
-        .container { display: flex; gap: 20px; max-width: 1200px; margin: 0 auto; }
-        .side { flex: 1; display: flex; flex-direction: column; gap: 15px; }
-        .main { flex: 2; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        
-        /* 캘린더/체크박스 스타일 생략 (이전과 동일) */
+        .card { background: var(--card); padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+
+        /* 요일 표시 및 날짜 */
+        .header-card { text-align: center; border-bottom: 3px solid var(--primary); }
+        .date-picker { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-weight: bold; margin-bottom: 10px; box-sizing: border-box; }
+        #dayDisplay { font-size: 1.2em; font-weight: bold; color: var(--primary); }
+
+        /* 설정 보관함 */
+        .config-header { font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; padding-bottom: 10px; border-bottom: 1px solid #eee; }
+        .config-content { max-height: 300px; overflow-y: auto; display: none; margin-top: 10px; font-size: 0.85em; }
+        .config-inputs input { width: 95%; padding: 5px; margin-bottom: 4px; border: 1px solid #eee; }
+
+        /* 체크리스트 영역 */
+        .guide-box { background: #f8fbff; border-left: 5px solid var(--primary); padding: 15px; border-radius: 8px; }
+        .checklist-item { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
+        .progress-bar-bg { background: #eee; height: 10px; border-radius: 5px; margin: 10px 0; overflow: hidden; }
+        #progressBar { background: var(--success); width: 0%; height: 100%; transition: 0.3s; }
+
+        /* 미니 캘린더 */
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; margin-top: 10px; }
         .calendar-day { font-size: 0.8em; padding: 8px 0; text-align: center; border-radius: 4px; border: 1px solid #f0f0f0; cursor: pointer; }
-        .calendar-day.today { border: 2px solid #007bff; font-weight: bold; }
+        .calendar-day:hover { background: #f0f7ff; }
+        .calendar-day.today { border: 2px solid var(--primary); font-weight: bold; }
+        .calendar-day.vacation { background: var(--vacation); color: white; border-color: var(--vacation); }
+        .cal-header { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-weight: bold; font-size: 0.75em; color: #888; margin-bottom: 5px; }
+
+        .input-group { display: flex; gap: 5px; margin-top: 15px; }
+        .input-group input { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 5px; }
+        .btn { border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; color: white; font-weight: bold; }
+        .btn-blue { background: var(--primary); }
+        .btn-grey { background: #6c757d; }
+
+        ul { list-style: none; padding: 0; margin-top: 10px; }
+        li { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #f9f9f9; font-size: 0.9em; }
+        .done { text-decoration: line-through; color: #ccc; }
     </style>
 </head>
 <body>
 
-<div id="portal">
-    <h1>🎨 그림 팀 대시보드</h1>
-    <div class="user-cards">
-        <!-- 사용자 1 -->
-        <div class="user-card a">
-            <div id="nameA" class="name-display" onclick="changeName('A')">사용자 A</div>
-            <span class="edit-btn" onclick="changeName('A')">이름 수정</span>
-            <button class="btn-go" style="background:var(--userA)" onclick="startUser('A')">입장하기</button>
+<div class="dashboard">
+    <!-- 왼쪽: 설정 및 통계 -->
+    <div class="side-panel">
+        <div class="card header-card">
+            <input type="date" id="dateSelect" class="date-picker">
+            <div id="dayDisplay">날짜를 선택하세요</div>
         </div>
-        <!-- 사용자 2 -->
-        <div class="user-card b">
-            <div id="nameB" class="name-display" onclick="changeName('B')">사용자 B</div>
-            <span class="edit-btn" onclick="changeName('B')">이름 수정</span>
-            <button class="btn-go" style="background:var(--userB)" onclick="startUser('B')">입장하기</button>
-        </div>
-    </div>
-</div>
 
-<div id="dashboard">
-    <div class="nav-bar">
-        <button onclick="location.reload()" style="cursor:pointer; border:none; background:none;">◀ 유저 변경</button>
-        <h2 id="userNameTitle">사용자님의 대시보드</h2>
-        <button id="syncBtn" onclick="syncToCloud()" style="background: #28a745; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer;">☁️ 시트 저장</button>
-    </div>
-    <!-- ... 나머지 대시보드 HTML 구조 (이전 답변과 동일하게 유지) ... -->
-    <div class="container">
-        <div class="side">
-            <div class="card"><input type="date" id="dateSelect" onchange="refresh()" style="width:100%; padding:10px;"></div>
-            <div class="card"><div id="configArea"></div></div>
-            <div class="card"><div id="miniCalendar" class="calendar-grid"></div></div>
+        <div class="card">
+            <div class="config-header" onclick="toggleConfig()">⚙️ 커리큘럼 보관함 <span>▼</span></div>
+            <div id="configContent" class="config-content"></div>
         </div>
-        <div class="main">
-            <div id="themeBox" style="background:#f8fbff; padding:20px; border-radius:12px; border-left:6px solid #007bff;">
-                <h3 id="themeTitle">🎯 오늘의 테마</h3>
-                <div id="checkArea" style="margin: 20px 0;"></div>
-                <div id="progressInfo" style="font-weight:bold; color:#28a745;">달성률: 0%</div>
+
+        <div class="card">
+            <div style="font-weight: bold; margin-bottom: 10px; font-size: 0.9em;">🗓️ 월간 일정 요약</div>
+            <div class="cal-header">
+                <div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div>
             </div>
+            <div id="miniCalendar" class="calendar-grid"></div>
+            <p style="font-size: 0.7em; color: #999; margin-top: 8px;">* 날짜를 클릭하여 휴가/특별일정 표시(주황색)</p>
+        </div>
+
+        <div class="card">
+            <button class="btn btn-grey" style="width:100%" onclick="updateStats()">📊 통계 업데이트</button>
+            <div id="statBox" style="margin-top:10px; font-size: 0.85em;"></div>
+        </div>
+    </div>
+
+    <!-- 오른쪽: 오늘의 실행 -->
+    <div class="main-panel">
+        <div class="card guide-box">
+            <span id="themeTitle" style="font-size: 1.2em; font-weight: bold;">🎯 오늘의 테마</span>
+            <div id="checkArea" style="margin-top: 15px;"></div>
+            <div class="progress-bar-bg"><div id="progressBar"></div></div>
+            <div id="themeProgress" style="font-size: 0.9em; font-weight: bold; color: var(--success);">달성률: 0%</div>
+        </div>
+
+        <div class="card">
+            <div style="font-weight: bold; margin-bottom: 10px;">📝 개별 메모 및 할 일</div>
+            <div class="input-group">
+                <input type="text" id="todoInput" placeholder="오늘만의 특별한 일정을 입력하세요...">
+                <button class="btn btn-blue" onclick="addExtra()">추가</button>
+            </div>
+            <ul id="extraList"></ul>
         </div>
     </div>
 </div>
 
 <script>
-    const SCRIPT_URL = '사용자님의_구글_스크립트_URL'; // 👈 여기에 꼭 주소를 넣으세요!
-    let currentUserKey = ''; // A 또는 B
-    let currentUserName = ''; // 실제 이름
+    const dateInput = document.getElementById('dateSelect');
+    const roadmap = JSON.parse(localStorage.getItem('roadmap_v2')) || {};
+    const vacations = JSON.parse(localStorage.getItem('vacations')) || [];
 
+    // 초기화
     window.onload = () => {
-        // 저장된 이름 불러오기
-        const savedA = localStorage.getItem('name-A') || '사용자 A';
-        const savedB = localStorage.getItem('name-B') || '사용자 B';
-        document.getElementById('nameA').innerText = savedA;
-        document.getElementById('nameB').innerText = savedB;
+        dateInput.value = new Date().toISOString().split('T')[0];
+        initConfig();
+        updateUI();
     };
 
-    function changeName(key) {
-        const newName = prompt("새로운 이름을 입력하세요:", document.getElementById('name' + key).innerText);
-        if (newName) {
-            localStorage.setItem('name-' + key, newName);
-            document.getElementById('name' + key).innerText = newName;
-        }
+    // 1. 커리큘럼 설정
+    function initConfig() {
+        const container = document.getElementById('configContent');
+        const days = ['일요일','월요일','화요일','수요일','목요일','금요일','토요일'];
+        days.forEach((day, idx) => {
+            const data = roadmap[idx] || { theme: '', items: ['', ''] };
+            container.innerHTML += `
+                <div style="margin-bottom:10px;">
+                    <label style="font-weight:bold;">${day}</label>
+                    <div class="config-inputs">
+                        <input type="text" placeholder="테마" value="${data.theme}" onchange="saveConfig(${idx}, 'theme', this.value)">
+                        <input type="text" placeholder="필수 1" value="${data.items[0]}" onchange="saveConfig(${idx}, 0, this.value)">
+                        <input type="text" placeholder="필수 2" value="${data.items[1]}" onchange="saveConfig(${idx}, 1, this.value)">
+                    </div>
+                </div>`;
+        });
     }
 
-    function startUser(key) {
-        currentUserKey = key;
-        currentUserName = localStorage.getItem('name-' + key) || '사용자 ' + key;
-        document.getElementById('portal').style.display = 'none';
-        document.getElementById('dashboard').style.display = 'block';
-        document.getElementById('userNameTitle').innerText = `${currentUserName}님의 대시보드`;
-        // ... (나머지 refresh 및 초기화 로직 호출) ...
-        document.getElementById('dateSelect').value = new Date().toISOString().split('T')[0];
-        refresh();
+    function saveConfig(idx, type, val) {
+        if(!roadmap[idx]) roadmap[idx] = { theme: '', items: ['', ''] };
+        if(type==='theme') roadmap[idx].theme = val;
+        else roadmap[idx].items[type] = val;
+        localStorage.setItem('roadmap_v2', JSON.stringify(roadmap));
+        updateUI();
     }
 
-    // [기존의 refresh, saveStatus, saveConfig 함수들을 여기에 유지]
-    // syncToCloud 함수에서 user 필드에 currentUserKey 대신 currentUserName을 넣으면 시트에 이름이 찍힙니다!
-    async function syncToCloud() {
-        const btn = document.getElementById('syncBtn');
-        btn.innerText = '⏳ 저장 중...';
+    // 2. 미니 캘린더 생성
+    function renderCalendar() {
+        const cal = document.getElementById('miniCalendar');
+        cal.innerHTML = '';
+        const now = new Date(dateInput.value);
+        const year = now.getFullYear();
+        const month = now.getMonth();
         
-        const payload = {
-            user: currentUserName, // 👈 이제 'A'가 아니라 '루카' 같은 이름이 저장됩니다.
-            date: document.getElementById('dateSelect').value,
-            theme: document.getElementById('themeTitle').innerText,
-            progress: document.getElementById('progressInfo').innerText
-        };
+        const firstDay = new Date(year, month, 1).getDay();
+        const lastDate = new Date(year, month + 1, 0).getDate();
 
-        try {
-            await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-            alert('구글 시트에 저장 완료!');
-            btn.innerText = '☁️ 시트 저장';
-        } catch (e) {
-            alert('오류 발생!');
-            btn.innerText = '☁️ 시트 저장';
+        // 공백
+        for(let i=0; i<firstDay; i++) cal.innerHTML += '<div></div>';
+        
+        // 날짜
+        for(let d=1; d<=lastDate; d++) {
+            const fullDate = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const isToday = fullDate === dateInput.value ? 'today' : '';
+            const isVacation = vacations.includes(fullDate) ? 'vacation' : '';
+            
+            const dayEl = document.createElement('div');
+            dayEl.className = `calendar-day ${isToday} ${isVacation}`;
+            dayEl.innerText = d;
+            dayEl.onclick = () => toggleVacation(fullDate);
+            cal.appendChild(dayEl);
         }
     }
 
-    // (나머지 세부 함수들은 이전 코드와 동일하게 구현)
-    function refresh() { /* ... */ }
+    function toggleVacation(dateStr) {
+        const idx = vacations.indexOf(dateStr);
+        if(idx > -1) vacations.splice(idx, 1);
+        else vacations.push(dateStr);
+        localStorage.setItem('vacations', JSON.stringify(vacations));
+        renderCalendar();
+    }
+
+    // 3. UI 업데이트 로직
+    function updateUI() {
+        const d = new Date(dateInput.value);
+        document.getElementById('dayDisplay').innerText = ['일','월','화','수','목','금','토'][d.getDay()] + "요일";
+        
+        const data = roadmap[d.getDay()];
+        const checkArea = document.getElementById('checkArea');
+        checkArea.innerHTML = '';
+        
+        if(data && data.theme) {
+            document.getElementById('themeTitle').innerText = `🎯 오늘의 테마: ${data.theme}`;
+            const status = JSON.parse(localStorage.getItem('status-'+dateInput.value)) || {};
+            data.items.forEach((item, i) => {
+                if(!item) return;
+                const checked = status[i] ? 'checked' : '';
+                checkArea.innerHTML += `<div class="checklist-item"><input type="checkbox" ${checked} onchange="saveStatus(${i}, this.checked)"> ${item}</div>`;
+            });
+        } else {
+            document.getElementById('themeTitle').innerText = "🎯 설정된 테마가 없습니다.";
+        }
+        
+        renderCalendar();
+        updateProgress();
+        loadExtras();
+    }
+
+    function saveStatus(i, check) {
+        const status = JSON.parse(localStorage.getItem('status-'+dateInput.value)) || {};
+        status[i] = check;
+        localStorage.setItem('status-'+dateInput.value, JSON.stringify(status));
+        updateProgress();
+    }
+
+    function updateProgress() {
+        const all = document.querySelectorAll('#checkArea input').length;
+        const done = document.querySelectorAll('#checkArea input:checked').length;
+        const p = all ? Math.round(done/all*100) : 0;
+        document.getElementById('progressBar').style.width = p + '%';
+        document.getElementById('themeProgress').innerText = `달성률: ${p}%`;
+    }
+
+    function addExtra() {
+        const input = document.getElementById('todoInput');
+        if(!input.value) return;
+        const list = JSON.parse(localStorage.getItem('ex-'+dateInput.value)) || [];
+        list.push({t: input.value, d: false});
+        localStorage.setItem('ex-'+dateInput.value, JSON.stringify(list));
+        input.value = '';
+        loadExtras();
+    }
+
+    function loadExtras() {
+        const list = JSON.parse(localStorage.getItem('ex-'+dateInput.value)) || [];
+        const el = document.getElementById('extraList');
+        el.innerHTML = '';
+        list.forEach((item, i) => {
+            el.innerHTML += `<li><span class="${item.d?'done':''}" onclick="toggleEx(${i})">${item.t}</span><span style="cursor:pointer; color:red;" onclick="delEx(${i})">✕</span></li>`;
+        });
+    }
+
+    function toggleEx(i) {
+        const list = JSON.parse(localStorage.getItem('ex-'+dateInput.value));
+        list[i].d = !list[i].d;
+        localStorage.setItem('ex-'+dateInput.value, JSON.stringify(list));
+        loadExtras();
+    }
+
+    function delEx(i) {
+        const list = JSON.parse(localStorage.getItem('ex-'+dateInput.value));
+        list.splice(i, 1);
+        localStorage.setItem('ex-'+dateInput.value, JSON.stringify(list));
+        loadExtras();
+    }
+
+    function updateStats() {
+        const now = new Date(dateInput.value);
+        let days = 0, totalP = 0;
+        for(let i=1; i<=31; i++) {
+            const k = `status-${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+            const s = JSON.parse(localStorage.getItem(k));
+            if(s) {
+                days++;
+                const vals = Object.values(s);
+                totalP += (vals.filter(v=>v).length / vals.length) * 100;
+            }
+        }
+        document.getElementById('statBox').innerHTML = `이번 달 공부 일수: <b>${days}일</b><br>평균 달성률: <b>${days?Math.round(totalP/days):0}%</b>`;
+    }
+
+    function toggleConfig() {
+        const c = document.getElementById('configContent');
+        c.style.display = c.style.display === 'block' ? 'none' : 'block';
+    }
+
+    dateInput.addEventListener('change', updateUI);
 </script>
+
 </body>
 </html>
